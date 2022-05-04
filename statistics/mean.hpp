@@ -1,11 +1,19 @@
-#ifndef Mean_HEADER_H
-#define Mean_HEADER_H
-
+#ifndef statistics_Mean_H
+#define statistics_Mean_H
 #include <vector>
 using namespace std;
 
 template<class d>
-d Mean(vector &v);
+auto Mean(vector<d> &v)
+{
+        d meanvalue = 0;
+        for(auto i:v)
+        {
+                meanvalue += i;
+        }
+        meanvalue = meanvalue/v.size();
+        return meanvalue;
+}
+#endif // statistics_Mean_H
 
-#include "mean.cpp"
-#endif // Mean_HEADER_H
+
