@@ -10,4 +10,8 @@ int main()
 	cout << Mean(v1) << endl;
 	cout << svar(v1) << endl;
 	cout << sdev(v1) << endl;
+	
+	double a = 20;
+	a = RNG_norm();
+	cout << a;
 }
