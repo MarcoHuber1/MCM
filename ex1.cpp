@@ -25,8 +25,12 @@ double Gaussdist(double x, double mean = 0, double sdev = 1)
 auto Cos(double x)
 {return cos(x);}
 
+
+
 int main()
 {
+
+const char* Datei = "data1.txt";
 
 double (*f)(double);
 double (*p)(double, double, double);
@@ -38,21 +42,31 @@ cout << "Solution of Integral with trap. approx:" << a << endl;
 
 ///////////////////////////////////
 
+
+
 vector<double> N(101,0);
+FILE * handle = fopen(Datei, "w");
 for(int j = 0; j<101 ; ++j)
 {
-        N[j] = pow(10,1.+j*5/100.);
-	cout<< lround(N[j]) << endl;
+
+ vector<double> M(100,1);
+ for(int m = 0; m<100; ++m)
+ {
+	N[j] = pow(10,1.+j*5/100.);
+	//cout<< lround(N[j]) << endl;
 	vector<double> v(lround(N[j]),0);
 	RNG_normv(v);
 	for(int i = 0; i < lround(N[j]); ++i)
 	{
 		v[i] = cos(v[i]);
 	}
-	cout << lround(N[j]) <<endl;
-	//cout << Mean(v) << endl;
+	M[m] = Mean(v);
+	fprintf(handle, "%lf ",M[m]);
+ }
+	fprintf(handle, "\n");
 
 }
+fclose(handle);
 }
 
 
