@@ -34,8 +34,30 @@ f = Cos;
 p = Gaussdist;
 
 double a = integrate(p,f);
-double b = Gaussdist(1);
-cout << b << endl;
-cout << a << endl;
+cout << "Solution of Integral with trap. approx:" << a << endl;
+
+///////////////////////////////////
+
+vector<double> N(101,0);
+for(int j = 0; j<101 ; ++j)
+{
+        N[j] = pow(10,1.+j*5/100.);
+	cout<< lround(N[j]) << endl;
+	vector<double> v(lround(N[j]),0);
+	RNG_normv(v);
+	for(int i = 0; i < lround(N[j]); ++i)
+	{
+		v[i] = cos(v[i]);
+	}
+	cout << lround(N[j]) <<endl;
+	//cout << Mean(v) << endl;
 
 }
+}
+
+
+
+
+
+
+
