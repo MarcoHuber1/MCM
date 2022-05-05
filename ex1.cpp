@@ -48,11 +48,12 @@ vector<double> N(101,0);
 FILE * handle = fopen(Datei, "w");
 for(int j = 0; j<101 ; ++j)
 {
-
+	
  vector<double> M(100,1);
  for(int m = 0; m<100; ++m)
  {
 	N[j] = pow(10,1.+j*5/100.);
+	fprintf(handle, "%ld ",lround(N[j]));
 	//cout<< lround(N[j]) << endl;
 	vector<double> v(lround(N[j]),0);
 	RNG_normv(v);
@@ -61,6 +62,7 @@ for(int j = 0; j<101 ; ++j)
 		v[i] = cos(v[i]);
 	}
 	M[m] = Mean(v);
+
 	fprintf(handle, "%lf ",M[m]);
  }
 	fprintf(handle, "\n");
