@@ -2,6 +2,7 @@
 #include <statistics.hpp>
 #include <vector>
 #include <cmath>
+#include <iomanip>
 
 #define _USE_MATH_DEFINES
 
@@ -41,22 +42,25 @@ double a = integrate(p,f);
 cout << "Solution of Integral with trap. approx:" << a << endl;
 
 ///////////////////////////////////
+unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+std::mt19937 gen;
+gen.seed(seed);
 
-
+//////////////////////////////////
 
 vector<double> N(101,0);
 FILE * handle = fopen(Datei, "w");
 for(int j = 0; j<101 ; ++j)
 {
-	
- vector<double> M(100,1);
+ 
+ N[j] = pow(10,1.+j*5/100.);
+ fprintf(handle, "%ld ",lround(N[j]));
+
+ vector<double> M(100,0);
  for(int m = 0; m<100; ++m)
  {
-	N[j] = pow(10,1.+j*5/100.);
-	fprintf(handle, "%ld ",lround(N[j]));
-	//cout<< lround(N[j]) << endl;
 	vector<double> v(lround(N[j]),0);
-	RNG_normv(v);
+	RNG_normv(v, gen);
 	for(int i = 0; i < lround(N[j]); ++i)
 	{
 		v[i] = cos(v[i]);

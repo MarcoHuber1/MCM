@@ -7,15 +7,11 @@
 #include <random>
 #include <vector>
 
-unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-std::mt19937 gen;
-
 //uniform numbers
 
 template<typename d>
-void RNG_univ(vector<d> &v, unsigned sd = seed)
+void RNG_univ(vector<d> &v, std::mt19937 &gen)
 {
-	gen.seed(sd);
 	std::uniform_int_distribution<int> unidist(1,100);
 
         for(int i=0; i<v.size(); ++i)
@@ -23,21 +19,19 @@ void RNG_univ(vector<d> &v, unsigned sd = seed)
                 v[i] = unidist(gen);
         }
 }
-
-auto RNG_uni(unsigned sd = seed)
+template<typename d>
+void RNG_uni(d &number, std::mt19937 &gen)
 {
-	gen.seed(sd);
 	std::uniform_int_distribution<int> unidist(1,100);
-	return unidist(gen);
+	number = unidist(gen);
 }
 
 
 //normal numbers
 
 template<typename d>
-void RNG_normv(vector<d> &v, double mean = 0.0, double sdev = 1.0, unsigned sd = seed)
+void RNG_normv(vector<d> &v, std::mt19937 &gen, double mean = 0.0, double sdev = 1.0)
 {
-        gen.seed(sd);
         std::normal_distribution<double> normdist(mean,sdev);
 
         for(int i=0; i<v.size(); ++i)
@@ -46,11 +40,11 @@ void RNG_normv(vector<d> &v, double mean = 0.0, double sdev = 1.0, unsigned sd =
         }
 }
 
-auto RNG_norm(double mean = 0.0, double sdev = 1.0, unsigned sd = seed)
+template<typename d>
+void RNG_norm(d &number, std::mt19937 &gen, double mean = 0.0, double sdev = 1.0)
 {
-        gen.seed(sd);
-        std::normal_distribution<double> normdist(mean,sdev);
-        return normdist(gen);
+        std::normal_distribution<d> normdist(mean,sdev);
+        number = normdist(gen);
 }
 
 
