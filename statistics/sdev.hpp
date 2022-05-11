@@ -11,8 +11,8 @@ d sdev(vector<d> &v)
 {return sqrt(svar(v));}
 
 template<class d>
-d sdev_s(vector<d> &v)
-{return sqrt(svar_s(v));}
+d sdev_s(vector<d> &v,d mean)
+{return sqrt(svar_s(v,mean));}
 
 #endif // statistics_sdev_H
 	

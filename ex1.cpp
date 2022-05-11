@@ -74,8 +74,8 @@ for(int j = 0; j<101 ; ++j) // 101 different Ns
 	M[m] = Mean(v);
 
 	fprintf(handle, "%lf ",M[m]);
-	M[m] -= a;
-	stdev_vector[j] = sdev_s(M);
+	
+	stdev_vector[j] = sdev_s(M,a);
  }
 
 	fprintf(handle2, "%lf ",stdev_vector[j]);

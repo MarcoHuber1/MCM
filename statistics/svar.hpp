@@ -20,9 +20,8 @@ auto svar(vector<d> &v)
 }
 
 template<class d>
-auto svar_s(vector<d> &v)
+auto svar_s(vector<d> &v,d meanvalue)
 {
-	d meanvalue = Mean(v);
         d var = 0;
 
         for(auto i:v)
