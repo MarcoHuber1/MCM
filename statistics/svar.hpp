@@ -8,8 +8,9 @@ using namespace std;
 template<class d>
 auto svar(vector<d> &v)
 {
-        d meanvalue = Mean(v);
+	d meanvalue = Mean(v);
         d var = 0;
+
         for(auto i:v)
         {
                 var += pow((i - meanvalue),2);
@@ -21,8 +22,9 @@ auto svar(vector<d> &v)
 template<class d>
 auto svar_s(vector<d> &v)
 {
-        d meanvalue = Mean(v);
+	d meanvalue = Mean(v);
         d var = 0;
+
         for(auto i:v)
         {
                 var += pow((i - meanvalue),2);
@@ -30,6 +32,7 @@ auto svar_s(vector<d> &v)
         var = var/(v.size()-1);
         return var;
 }
+
 
 #endif // statistics_svar_H
 
