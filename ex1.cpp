@@ -54,7 +54,7 @@ FILE * handle = fopen(Datei, "w");
 FILE * handle2 = fopen(Datei2, "w");
 
 for(int j = 0; j<101 ; ++j) // 101 different Ns
- 
+{ 
  N[j] = pow(10,1.+j*5/100.); //sample size N
 
  fprintf(handle, "%ld ",lround(N[j]));
@@ -73,11 +73,9 @@ for(int j = 0; j<101 ; ++j) // 101 different Ns
 	}
 	M[m] = Mean(v);
 
-	stdev_vector[j] += (M[m] - a); //sigma = sum_M(mu - exp.value)
-
 	fprintf(handle, "%lf ",M[m]);
  }
- 	stdev_vector[j] = stdev_vector[j] / (100 - 1); //sigma = sigma/(M-1)
+ 	sdev(stdev_vector);
 
 	fprintf(handle2, "%lf ",stdev_vector[j]);
 	fprintf(handle, "\n");
@@ -85,6 +83,7 @@ for(int j = 0; j<101 ; ++j) // 101 different Ns
 
 }
 fclose(handle);
+fclose(handle2);
 }
 
 
