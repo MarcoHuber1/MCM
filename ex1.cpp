@@ -32,6 +32,7 @@ int main()
 {
 
 const char* Datei = "data1.txt";
+const char* Datei2 = "data2.txt";
 
 double (*f)(double);
 double (*p)(double, double, double);
@@ -50,13 +51,18 @@ gen.seed(seed);
 
 vector<double> N(101,0);
 FILE * handle = fopen(Datei, "w");
+FILE * handle2 = fopen(Datei2, "w");
+
 for(int j = 0; j<101 ; ++j)
 {
  
  N[j] = pow(10,1.+j*5/100.);
  fprintf(handle, "%ld ",lround(N[j]));
+ fprintf(handle2, "%ld ",lround(N[j]));
 
  vector<double> M(100,0);
+ vector<double> stdev_vector(101,0);
+
  for(int m = 0; m<100; ++m)
  {
 	vector<double> v(lround(N[j]),0);
@@ -66,10 +72,14 @@ for(int j = 0; j<101 ; ++j)
 		v[i] = cos(v[i]);
 	}
 	M[m] = Mean(v);
-
+	stdev_vector[j] += (M[m] - a);
 	fprintf(handle, "%lf ",M[m]);
  }
+ 	stdev_vector[j] = stdev_vector[j] / (100 - 1);
+
+	fprintf(handle2, "%lf ",stdev_vector[j]);
 	fprintf(handle, "\n");
+	fprintf(handle2, "\n");
 
 }
 fclose(handle);
