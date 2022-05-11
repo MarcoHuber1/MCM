@@ -53,29 +53,31 @@ vector<double> N(101,0);
 FILE * handle = fopen(Datei, "w");
 FILE * handle2 = fopen(Datei2, "w");
 
-for(int j = 0; j<101 ; ++j)
-{
+for(int j = 0; j<101 ; ++j) // 101 different Ns
  
- N[j] = pow(10,1.+j*5/100.);
+ N[j] = pow(10,1.+j*5/100.); //sample size N
+
  fprintf(handle, "%ld ",lround(N[j]));
  fprintf(handle2, "%ld ",lround(N[j]));
 
- vector<double> M(100,0);
- vector<double> stdev_vector(101,0);
+ vector<double> M(100,0); //vector for Means of rep. sampling
+ vector<double> stdev_vector(101,0); //standard dev. values
 
- for(int m = 0; m<100; ++m)
+ for(int m = 0; m<100; ++m) //repeated sampling
  {
 	vector<double> v(lround(N[j]),0);
 	RNG_normv(v, gen);
-	for(int i = 0; i < lround(N[j]); ++i)
+	for(int i = 0; i < lround(N[j]); ++i) //Samples i=1,...,N
 	{
-		v[i] = cos(v[i]);
+		v[i] = cos(v[i]); 
 	}
 	M[m] = Mean(v);
-	stdev_vector[j] += (M[m] - a);
+
+	stdev_vector[j] += (M[m] - a); //sigma = sum_M(mu - exp.value)
+
 	fprintf(handle, "%lf ",M[m]);
  }
- 	stdev_vector[j] = stdev_vector[j] / (100 - 1);
+ 	stdev_vector[j] = stdev_vector[j] / (100 - 1); //sigma = sigma/(M-1)
 
 	fprintf(handle2, "%lf ",stdev_vector[j]);
 	fprintf(handle, "\n");
