@@ -34,9 +34,11 @@ class Grid
 	
 	//Reshaping
 	//M->V
-	auto reshapeMV const
+	void reshapeMV const
 	{
-		for(
+		for(auto i : m_dim_x)
+			for(auto j : m_dim_y)
+			{
 	//Get dimensions of grid
 	static constexpr auto dimX() const
 	{
