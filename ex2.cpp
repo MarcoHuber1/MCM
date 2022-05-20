@@ -4,6 +4,7 @@
 
 int main()
 {
-	Grid lattice;
+	Grid::Vector<double> Vec(4);
+	//Grid::Vector<double> Vec2(3,4);
 }
 

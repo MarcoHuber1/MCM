@@ -8,7 +8,8 @@ class Grid
 	private:
 	size_t m_dim_x = 10;
 	size_t m_dim_y = 10;
-	
+
+	public:	
 	template<typename Val>	
 	class Vector
 	{
