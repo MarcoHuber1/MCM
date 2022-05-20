@@ -1,56 +1,67 @@
 #ifndef Grid_H
 #define Grid_H
+#include<statistics.hpp>
+#include<cstddef>
 
-template<>
 class Grid
 {
-
 	private:
-     	//2D
-	const int m_dim_x = 10;
-	const int m_dim_y = 10;
-	const int Dim = m_dim_x *m_dim_y;
-	double PointXY[m_dim_x][m_dim_y];
-
-	//1D Linearisation
-	std::vector<double> Point(Dim,0);
-
-	public:
-
-	//Constructors
-	Grid() = default;
-	Grid(int L): m_dim_x(L), m_dim_y(L) {}
-	Grid(int Lx, int Ly): m_dim_x(Lx), m_dim_y(Ly) {}
-
-	//Gridmatrix:
-	static constexpr auto GetSpin(int x, int y) const
-	{
-		return Position[x][y];
-	}
-	auto ChangeSpin(int x, int y, double value)
-	{
-		Position[x][y] = value;
-	}
+	size_t m_dim_x = 10;
+	size_t m_dim_y = 10;
 	
-	//Reshaping
-	//M->V
-	void reshapeMV const
+	template<typename Val>	
+	class Vector
 	{
-		for(auto i : m_dim_x)
-			for(auto j : m_dim_y)
-			{
-	//Get dimensions of grid
-	static constexpr auto dimX() const
-	{
-		return m_dim_x;
-	}
+		private:
+		Val *vec = nullptr;
+		size_t m_Dim = m_dim_x *m_dim_y;
 	
-	static constexpr auto dimY() const
-	{
-		return m_dim_y;
-	}
 
+		public:
+		Vector() = default;
+		Vector(size_t L); //symm. grid
+        	Vector(size_t Lx, size_t Ly); //not symm. gird
+        	Vector(const Vector &orig);
+
+		~Vector();
+	};
 };
+
+/////////////////////Constructors//////////////////////////
+
+template<typename Val>
+Grid::Vector<Val>::Vector(size_t L)
+{
+	m_dim_x = L;
+	m_dim_y = L;
+	m_Dim = m_dim_x * m_dim_y;
+
+	vec = new Val[m_Dim]{};
+}
+
+template<typename Val>
+Grid::Vector<Val>::Vector(size_t Lx, size_t Ly)
+{
+        m_dim_x = Lx;
+        m_dim_y = Ly;
+        m_Dim = m_dim_x * m_dim_y;
+
+        vec = new Val[m_Dim]{};
+}
+
+//Copy constr.
+template<typename Val>
+Grid::Vector<Val>::Vector(const Vector &orig): Vector(orig.m_Dim)
+{
+	delete[] vec;
+	m_Dim = orig.m_Dim;
+	vec = new Val[m_Dim]{};
+	std::copy(orig.vec, orig.vec + m_Dim, vec);
+}
+
+/////////////////////Destructor///////////////////////////
+
+
 
 #endif //Grid_H
 
