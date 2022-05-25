@@ -17,49 +17,45 @@ class Grid
     
     //Functions
     size_t GetGrid_Dim() {return m_Dim;};
+    size_t GetGrid_Dimx() {return m_dim_x;};
+    size_t GetGrid_Dimy() {return m_dim_y;};
 };
 template<typename Val>
 class Vector
 {
-		private:
-		std::vector<Val> vec;
+    private:
+    std::vector<Val> vec;
 
-		Grid *grid; //get access to private of grid
+    Grid *grid; //get access to private of grid
 				
-		public:
-		//Constructors
-		Vector<Val>(Grid *grid);
+    public:
+    //Constructors
+    Vector<Val>(Grid *grid);
 		
-		//Destructor
-		~Vector();
+    //Destructor
+    ~Vector();
 		
-		//Operators
-		Val& operator[](size_t index);
+    //Operators
+    Val& operator[](size_t index);
         
-		//Functions
+    //Functions
 };
 
-/*		
-	class Lattice
-	{
-		private:
-		Val *mX = nullptr;
-		Val **matrix = nullptr;
-		Grid *grid;
-		Vector *vec;
+template<typename Val>
+class Lattice
+{
+    private:
+    std::vector<std::vector<Val>> Lat;
 
-		public:
-		//Constructors
-		Lattice(Vector *vec): vec(*vec) {};
-		Lattice(Grid *grid): grid(*grid) {};
-		
-		Lattice() = default;
-		Lattice(size_t L);
-		Lattice(size_t Lx, size_t Ly);
-		Lattice(const Lattice &orig);
+    Grid *grid;
+    
+    public:
+    Lattice<Val>(Grid *grid);
+    
+    ~Lattice();
 
-	};
-*/
+};
+
 /////////////////////Constructors//////////////////////////
 
 Grid::Grid(size_t L)
@@ -85,9 +81,34 @@ Vector<Val>::Vector(Grid *grid) :grid(grid)
     {vec[i] = 1;}
 }
 
+template<typename Val>
+Lattice<Val>::Lattice(Grid *grid) :grid(grid)
+{
+    auto dim_x = grid->GetGrid_Dimx();
+    auto dim_y = grid->GetGrid_Dimy();
+    
+    Lat.resize(dim_y);
+    for(int i=0; i<dim_y; ++i)
+    {
+        Lat[i].resize(dim_x);
+    }
+    
+
+    for(int i = 0; i<dim_x; ++i)
+    {
+        Lat[i][0] = 1;
+        Lat[0][i] = -1;
+    
+    }
+}
+
 /////////////////////Destructor///////////////////////////
 template<typename Val>
 Vector<Val>::~Vector()
+{}
+
+template<typename Val>
+Lattice<Val>::~Lattice()
 {}
 
 ////////////////////Operators////////////////////////////
