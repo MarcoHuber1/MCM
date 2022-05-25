@@ -4,10 +4,14 @@
 
 int main()
 {
-	Grid::Vector<double> Vec(4);
-	//Grid::Vector<double> Vec2(3,4);
-	std::cout << Vec[0];
-	Vec[0] = 7;
-	std::cout << Vec[0];
+
+	Grid lattice(3);
+	Vector<int> vec(&lattice);
+	//Grid::Vector<double> Vec2(4);
+//	Grid::Vector<double> Vec2(3,4);
+//	std::cout << Vec[0];
+	vec[0] = 7;
+	std::cout << vec[0];
+//	Vec + Vec2;
 }
 
