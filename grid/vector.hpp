@@ -75,10 +75,14 @@ Grid::Grid(size_t Lx, size_t Ly)
 	m_dim_y = Ly;
 	m_Dim = m_dim_x * m_dim_y;
 }
+
 template<typename Val>
 Vector<Val>::Vector(Grid *grid) :grid(grid)
 {
-	vec.resize(grid->GetGrid_Dim());
+    auto DIM = grid->GetGrid_Dim();
+	vec.resize(DIM);
+    for(int i = 0; i<DIM; ++i)
+    {vec[i] = 1;}
 }
 
 /////////////////////Destructor///////////////////////////
