@@ -22,7 +22,9 @@ class Grid
 				
 		public:
 		//Constructors
-		Vector(Grid *grid): grid(*grid) {}; //default constr.	
+		Vector(Grid *grid): grid(*grid) {}; 
+
+		Vector() = default;	
 		Vector(size_t L); //symm. grid
         	Vector(size_t Lx, size_t Ly); //not symm. gird
         	Vector(const Vector &orig);
@@ -34,6 +36,28 @@ class Grid
 		Val& operator[](size_t index) const;
 
 		//Functions
+		
+	template<typename Val>	
+	class Lattice
+	{
+		private:
+		Val *mX = nullptr;
+		Val *mY = nullptr;
+		Val **matrix = nullptr;
+		Grid *grid;
+		Vector *vec;
+
+		public:
+		//Constructors
+		Lattice(Vector *vec): vec(*vec) {};
+		Lattice(Grid *grid): grid(*grid) {};
+		
+		Lattice() = default;
+		Lattice(size_t L);
+		Lattice(size_t Lx, size_t Ly);
+		Lattice(const Lattice &orig);
+
+	};
 
 	};
 };
@@ -70,6 +94,19 @@ Grid::Vector<Val>::Vector(const Vector &orig): Vector(orig.m_Dim)
 	std::copy(orig.vec, orig.vec + m_Dim, vec);
 }
 
+template<typename Val>
+Grd::Lattice<Val>::Lattice(size_t L)
+{
+	grid->m_dim_x = L;
+	grid->m_dim_y = L;
+
+	mX = new Val[m_dim_x];
+	mY = new Val[m_dim_y];
+
+	matrix = std::vector< 
+
+
+}
 /////////////////////Destructor///////////////////////////
 template<typename Val>
 Grid::Vector<Val>::~Vector()
