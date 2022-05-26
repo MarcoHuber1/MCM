@@ -16,10 +16,11 @@ class Grid
 	Grid(size_t L);
     
     //Functions
-    size_t GetGrid_Dim() {return m_Dim;};
-    size_t GetGrid_Dimx() {return m_dim_x;};
-    size_t GetGrid_Dimy() {return m_dim_y;};
+    size_t Dim() {return m_Dim;};
+    size_t DimX() {return m_dim_x;};
+    size_t DimY() {return m_dim_y;};
 };
+
 template<typename Val>
 class Vector
 {
@@ -27,10 +28,10 @@ class Vector
     std::vector<Val> vec;
 
     Grid *grid; //get access to private of grid
-				
+
     public:
     //Constructors
-    Vector<Val>(Grid *grid);
+    Vector(Grid *grid);
 		
     //Destructor
     ~Vector();
@@ -39,6 +40,9 @@ class Vector
     Val& operator[](size_t index);
         
     //Functions
+    size_t Dim() {return grid->Dim();}    
+	
+    void print();    
 };
 
 template<typename Val>
@@ -50,10 +54,16 @@ class Lattice
     Grid *grid;
     
     public:
-    Lattice<Val>(Grid *grid);
+    Lattice(Grid *grid);
     
     ~Lattice();
 
+    Val& operator()(size_t i, size_t j);
+
+    size_t DimX() {return grid->DimX();}
+    size_t DimY() {return grid->DimY();}
+    
+    void print();
 };
 
 /////////////////////Constructors//////////////////////////
@@ -75,31 +85,25 @@ Grid::Grid(size_t Lx, size_t Ly)
 template<typename Val>
 Vector<Val>::Vector(Grid *grid) :grid(grid)
 {
-    auto DIM = grid->GetGrid_Dim();
-	vec.resize(DIM);
+    auto DIM = grid->Dim();
+    vec.resize(DIM);
+
     for(int i = 0; i<DIM; ++i)
-    {vec[i] = 1;}
+    {vec[i] = 0;}
 }
 
 template<typename Val>
 Lattice<Val>::Lattice(Grid *grid) :grid(grid)
 {
-    auto dim_x = grid->GetGrid_Dimx();
-    auto dim_y = grid->GetGrid_Dimy();
+    auto X = grid->DimX();
+    auto Y = grid->DimY();
     
-    Lat.resize(dim_y);
-    for(int i=0; i<dim_y; ++i)
+    Lat.resize(Y);
+    for(int i=0; i<Y; ++i)
     {
-        Lat[i].resize(dim_x);
+        Lat[i].resize(X);
     }
-    
-
-    for(int i = 0; i<dim_x; ++i)
-    {
-        Lat[i][0] = 1;
-        Lat[0][i] = -1;
-    
-    }
+ 
 }
 
 /////////////////////Destructor///////////////////////////
@@ -116,6 +120,80 @@ template<typename Val>
 Val& Vector<Val>::operator[](size_t index)
 {
 	return vec[index];
+}
+
+template<typename Val>
+Val& Lattice<Val>::operator()(size_t x, size_t y)
+{
+	return Lat[x][y];
+}
+
+//////////////////Functions/////////////////////////////
+template<typename Val>
+void Lattice<Val>::print()
+{
+	auto X = DimX();
+	auto Y = DimY();
+
+	for(int i = 0; i<X; ++i)
+	{
+		for(int j = 0; j<Y; ++j)
+		{
+			std::cout << Lat[i][j] << " ";
+		}
+
+	 	std::cout << "\n";
+	}
+}
+
+template<typename Val>
+void Vector<Val>::print()
+{
+	auto D = Dim();
+
+	for(int d = 0; d<D; ++d)
+	{
+		std::cout << vec[d] << " ";
+	}
+	std::cout << "\n";
+}
+
+template<typename Val>
+Lattice<Val> transform(Vector<Val> &vec, Grid *grid)
+{
+	Lattice<Val> lat(grid);
+
+	auto D = vec.Dim(); 
+	auto X = grid->DimX();
+	auto Y = grid->DimY();
+
+         for(int i = 0; i<X; ++i)
+         {
+                 for(int j=0; j<Y; ++j)
+                 {
+                         lat(i,j) = vec[i*Y+j];
+                 }
+         }
+	return lat;
+}
+
+template<typename Val>
+Vector<Val> transform(Lattice<Val> &lat, Grid *grid)
+{
+	Vector<Val> vec(grid);
+
+	auto X = lat.DimX();
+	auto Y = lat.DimY();
+
+	for(int i = 0; i<X; ++i)
+	{
+		for(int j=0; j<Y; ++j)
+		{
+			vec[i*X+j] = lat(i,j);
+		}
+	}
+
+	return vec;
 }
 
 #endif //Grid_H
