@@ -214,13 +214,10 @@ auto NN(Grid *grid)
 {
     std::vector<std::array<int,4>> NN; //Vector(top,bottom,left,right)
     NN.resize(grid->Dim());
-    Vector<Val> vec(grid);
     Lattice<Val> lat(grid); //lat(x,y)
     
     auto Lx = grid->DimX();
     auto Ly = grid->DimY();
-    
-    lat = transform(vec,grid);
     
     for(int point = 0; point < grid->Dim(); ++point)
     {       
