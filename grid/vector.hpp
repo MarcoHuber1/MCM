@@ -210,7 +210,7 @@ Vector<Val> transform(Lattice<Val> &lat, Grid *grid)
 }
 
 template<typename Val>
-auto NN(Grid *grid)
+std::vector<std::array<int,4>> NN(Grid *grid)
 {
     std::vector<std::array<int,4>> NN; //Vector(top,bottom,left,right)
     NN.resize(grid->Dim());
@@ -240,7 +240,6 @@ auto NN(Grid *grid)
         }
             
     }
-    //lat.print();
     return NN;
 }
 

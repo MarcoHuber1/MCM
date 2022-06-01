@@ -2,32 +2,56 @@
 #include<statistics.hpp>
 #include<grid.hpp>
 
+double Energy(std::vector<std::array<int,4>> NN, Vector<int> Gridvector,double J,double B);
+double Z(Vector<int> Gridvector, double beta, double energy);
+
 int main()
 {
-
-	Grid lattice(3);
-	Vector<int> vec(&lattice);
+    /////////////////parameters//////////////
+    double J = 1;
+    double k = 1;
+    double B = 1;
+    double beta = -1;
     
-	Grid lattice2(3,8);
-	Lattice<int> lat(&lattice2);
-    lat.print();
+    
+    ////////////////Grid and Gridvector//////
+	Grid Grid_2D(10);
+	Vector<int> Gridvector(&Grid_2D);
+    //Gridvector.print();
+    std::vector<std::array<int,4>> NN_vector = NN<int>(&Grid_2D); //Generating table for next neigbors
+    double energy = Energy(NN_vector,Gridvector,J,B);
+    std::cout << energy << std::endl;
+    
+    double Zp = Z(Gridvector, beta, energy);
+    std::cout << Zp << std::endl;
+    
+    
+    
 	
-
-	Vector<int> trans(&lattice2); 
-	trans = transform(lat,&lattice2);
-	trans.print();
-     
-	Lattice<int> trans2(&lattice2);
-    
-	trans2 = transform(trans,&lattice2);
-    
-	trans2.print();
-   
-    auto Next = NN<int>(&lattice2);
-    std::cout << "top"<< Next[23][0] << std::endl;
-    std::cout << "bot"<<Next[23][1] << std::endl;
-    std::cout << "left"<<Next[23][2] << std::endl;
-    std::cout << "right"<<Next[23][3] << std::endl;
 
 }
 
+double Energy(std::vector<std::array<int,4>> NN, Vector<int> Gridvector,double J,double B)
+{
+    double Energy = 0;
+    for(int point = 0; point< Gridvector.Dim(); ++point)
+    {
+        for(int position = 0; position < 4; ++position)
+        {
+            Energy += -J * Gridvector[point] * Gridvector[NN[point][position]] - B * Gridvector[point];
+        }
+    }
+    return Energy;
+}
+
+double Z(Vector<int> Gridvector, double beta, double energy)
+{
+    double Z = 0;
+    for(int point = 0; point< Gridvector.Dim(); ++point)
+    {
+        Z += exp(-beta * energy);
+    }
+    return Z;
+}
+        
+    
