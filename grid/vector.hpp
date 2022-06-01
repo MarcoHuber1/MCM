@@ -2,6 +2,7 @@
 #define Grid_H
 #include<statistics.hpp>
 #include<cstddef>
+#include<array>
 
 
 class Grid
@@ -89,7 +90,7 @@ Vector<Val>::Vector(Grid *grid) :grid(grid)
     vec.resize(DIM);
 
     for(int i = 0; i<DIM; ++i)
-    {vec[i] = 0;}
+    {vec[i] = i;}
 }
 
 template<typename Val>
@@ -98,11 +99,20 @@ Lattice<Val>::Lattice(Grid *grid) :grid(grid)
     auto X = grid->DimX();
     auto Y = grid->DimY();
     
-    Lat.resize(Y);
-    for(int i=0; i<Y; ++i)
+    Lat.resize(X);
+    for(int i=0; i<X; ++i)
     {
-        Lat[i].resize(X);
+        Lat[i].resize(Y);
     }
+    
+    for(int i = 0; i<X; ++i)
+	{
+		for(int j = 0; j<Y; ++j)
+		{
+			Lat[i][j] = i*Y +j;
+		}
+    }
+    
  
 }
 
@@ -143,7 +153,9 @@ void Lattice<Val>::print()
 		}
 
 	 	std::cout << "\n";
+        
 	}
+	std::cout << "\n \n";
 }
 
 template<typename Val>
@@ -156,6 +168,7 @@ void Vector<Val>::print()
 		std::cout << vec[d] << " ";
 	}
 	std::cout << "\n";
+    std::cout << "\n \n";
 }
 
 template<typename Val>
@@ -189,11 +202,49 @@ Vector<Val> transform(Lattice<Val> &lat, Grid *grid)
 	{
 		for(int j=0; j<Y; ++j)
 		{
-			vec[i*X+j] = lat(i,j);
+			vec[i*Y+j] = lat(i,j);
 		}
 	}
 
 	return vec;
+}
+
+template<typename Val>
+auto NN(Grid *grid)
+{
+    std::vector<std::array<int,4>> NN; //Vector(top,bottom,left,right)
+    NN.resize(grid->Dim());
+    Vector<Val> vec(grid);
+    Lattice<Val> lat(grid); //lat(x,y)
+    
+    auto Lx = grid->DimX();
+    auto Ly = grid->DimY();
+    
+    lat = transform(vec,grid);
+    
+    for(int point = 0; point < grid->Dim(); ++point)
+    {       
+            int x = (int)point/Ly; 
+            int y = point % Ly;
+            
+        for(int i = 0; i<4; ++i)
+        {
+            if(i == 0) //top
+            {NN[point][i]=lat((x-1+Lx)%Lx,y);}
+            
+            if(i == 1)//bottom
+            {NN[point][i]=lat((x+1)%Lx,y);}
+            
+            if(i == 2) //left
+            {NN[point][i]=lat(x,(y+Ly-1)%Ly);}
+            
+            if(i == 3) //right
+            {NN[point][i]=lat(x,(y+1)%Ly);}
+        }
+            
+    }
+    //lat.print();
+    return NN;
 }
 
 #endif //Grid_H
