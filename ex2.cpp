@@ -12,14 +12,15 @@ int main()
     double k = 1;
     double B = 1;
     double beta = -1;
-    
-    
+
     ////////////////Grid and Gridvector//////
+    using table = std::vector<std::array<int,4>>;
+
 	Grid Grid_2D(10);
 	Vector<int> Gridvector(&Grid_2D);
-    //Gridvector.print();
-    std::vector<std::array<int,4>> NN_vector = NN<int>(&Grid_2D); //Generating table for next neigbors
-    double energy = Energy(NN_vector,Gridvector,J,B);
+
+    NN<int>(&Grid_2D); //Generating table for next neigbors
+    double energy = ED<int>(&Gridvector, &Grid_2D);
     std::cout << energy << std::endl;
     
     double Zp = Z(Gridvector, beta, energy);
@@ -31,18 +32,6 @@ int main()
 
 }
 
-double Energy(std::vector<std::array<int,4>> NN, Vector<int> Gridvector,double J,double B)
-{
-    double Energy = 0;
-    for(int point = 0; point< Gridvector.Dim(); ++point)
-    {
-        for(int position = 0; position < 4; ++position)
-        {
-            Energy += -J * Gridvector[point] * Gridvector[NN[point][position]] - B * Gridvector[point];
-        }
-    }
-    return Energy;
-}
 
 double Z(Vector<int> Gridvector, double beta, double energy)
 {
