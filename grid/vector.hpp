@@ -219,7 +219,7 @@ Lattice<Val>::Lattice(Grid *grid) :grid(grid)
 	{
 		for(int j = 0; j<Y; ++j)
 		{
-			Lat[i][j] = 0;
+			Lat[i][j] = i*Y+j;
 		}
     }
 }
@@ -300,7 +300,6 @@ void NN(Grid *g, Vector<Val> &Configuration)
     //NextNeigbor = Vector(top,bottom,left,right)
 
     Lattice<Val> lat(g); //lat(x,y)
-    lat = transform(Configuration,g);
 
     const auto Lx = g->DimX();
     const auto Ly = g->DimY();
@@ -336,11 +335,8 @@ void q(double &q,Vector<Val> &Configuration, Grid *g, int &point)
 {
 
     for(int i = 0; i<4; ++i)
-    {
-        q += Configuration[g->getNN(point,i)];
-        std::cout << g->getNN(point,i);
-    }
-    std::cout << std::endl;
+    {q += Configuration[g->getNN(point,i)];}
+
     q *= Configuration[point];
 }
 
@@ -359,7 +355,7 @@ double lookuptable(double &Q,int &Spin, Grid *g)
 
     double q2 = exp(-4*g->getBeta()*g->getJ());
     double q4 = exp(-8*g->getBeta()*g->getJ());
-    std::cout << q2 << "\n" <<q4 <<std::endl;
+
 
     if(g->getB() == 0)
     {
@@ -386,11 +382,15 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     Vector<Val> rho(g);
     Lattice<Val> lat(g);
     lat = transform(Configuration, g);
-    lat.print();
+    //lat.print();
+
+    int acceptance = 0;
+    int rejection = 0;
+    int proposals = 0;
     //Markov iteration
     for(int i=0; i< Iterations; ++i)
     {
-        std::cout << "MT: "<< MarkovTime << std::endl;
+        //std::cout << "MT: "<< MarkovTime << std::endl;
 
         //Getting each point of Configuration
         for(int point = 0; point < Configuration.Dim(); ++point)
@@ -398,10 +398,12 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
             //lat = transform(Configuration, g);
             //lat.print();
             Spinflip(Configuration,point); //new proposal
-
+            proposals +=1;
             double Q = 0;
             q(Q,Configuration, g, point);
-            std::cout << Q << std::endl;
+            //std::cout << Q << std::endl;
+            if(Q < 0)
+                acceptance += 1;
 
             if(Q > 0)
             {
@@ -412,14 +414,24 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
                 //std::cout << "Rho: "<< Rho <<std::endl;
                 //std::cout << "RN: "<< RandomNumber <<std::endl;
 
-                if(RandomNumber > Rho)
+                if(RandomNumber <= Rho)
+                {
                     Spinflip(Configuration,point);
+                    //std::cout << "rejected" << std::endl;
+                    acceptance += 1;
+                }
+                else
+                {
+                    //std::cout << "accepted" << std::endl;
+                    rejection += 1;
+                }
+
             }
             //else would be accept the new config
 
         }
         MarkovTime += 1;
-
     }
+    std::cout << (double)acceptance/(proposals) << std::endl;
 }
 #endif //Grid_H
