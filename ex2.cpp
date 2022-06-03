@@ -2,29 +2,41 @@
 #include<statistics.hpp>
 #include<grid.hpp>
 
-double Energy(std::vector<std::array<int,4>> NN, Vector<int> Gridvector,double J,double B);
-double Z(Vector<int> Gridvector, double beta, double energy);
 
 int main()
 {
+    //Set up Grid
+    Grid Grid_2D(10); //argument is lattice dimension
+    Lattice<int> Lat(&Grid_2D);
+
+
+    //Configuration vector
+	Vector<int> Configuration(&Grid_2D);
+    Lat = transform(Configuration,&Grid_2D);
+    Lat.print();
+
     /////////////////parameters//////////////
-    double J = 1;
-    double k = 1;
-    double B = 1;
-    double beta = -1;
+    double kb = 1.3806488 * pow(10,-23);
+    Grid_2D.setJ(1);
+    Grid_2D.setk(1);
+    Grid_2D.setB(0);
+    Grid_2D.setT(1*kb);
+    Grid_2D.setBeta(1/(Grid_2D.getT()));
 
-    ////////////////Grid and Gridvector//////
+    //NextNeigbor table
     using table = std::vector<std::array<int,4>>;
-
-	Grid Grid_2D(10);
-	Vector<int> Gridvector(&Grid_2D);
-
     NN<int>(&Grid_2D); //Generating table for next neigbors
-    double energy = ED<int>(&Gridvector, &Grid_2D);
+
+    //energydensity and magnetization
+
+    double energy = ED<int>(Configuration, &Grid_2D);
     std::cout << energy << std::endl;
+
+    double magnetization = MD<int>(Configuration, &Grid_2D);
+    std::cout << magnetization << std::endl;
     
-    double Zp = Z(Gridvector, beta, energy);
-    std::cout << Zp << std::endl;
+
+
     
     
     
@@ -32,15 +44,5 @@ int main()
 
 }
 
-
-double Z(Vector<int> Gridvector, double beta, double energy)
-{
-    double Z = 0;
-    for(int point = 0; point< Gridvector.Dim(); ++point)
-    {
-        Z += exp(-beta * energy);
-    }
-    return Z;
-}
         
     

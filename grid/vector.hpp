@@ -17,6 +17,7 @@ class Grid
     double mk = 1;
     double mB = 1;
     double mbeta = -1;
+    double mT = 0;
 
     std::vector<std::array<int,4>> NextNeigbor;
 
@@ -32,16 +33,24 @@ class Grid
     size_t DimX() {return m_dim_x;};
     size_t DimY() {return m_dim_y;};
 
-    //Set parameters
+    //parameters
     void setJ(double newJ) {mJ = newJ;};
     void setk(double newk) {mk = newk;};
     void setB(double newB) {mB = newB;};
     void setBeta(double newBeta) {mbeta = newBeta;};
+    void setT(double newT) {mT = newT;};
+
+    double getJ() {return mJ;};
+    double getk() {return mk;};
+    double getB() {return mB;};
+    double getBeta() {return mbeta;};
+    double getT() {return mT;};
 
 
     //Set NN
     void setNN(int i, int j, double value){NextNeigbor[i][j] = value;};
     void resizeNN(int size){NextNeigbor.resize(m_Dim);}
+    double getNN(int i, int j){return NextNeigbor[i][j];};
 
 
 
@@ -131,22 +140,33 @@ void Vector<Val>::print() //prints whole vector
 	std::cout << "\n";
     std::cout << "\n \n";
 }
-
+//Energydensity
 template<typename Val>
-double ED(Vector<Val> &Gridvector, Grid *g) //Energy density
+double ED(Vector<Val> &Configuration, Grid *g) //Energy density
 {
     double Energy = 0;
 
-    for(int point = 0; point< Gridvector.Dim(); ++point)
+    for(int point = 0; point< Configuration.Dim(); ++point)
     {
         for(int position = 0; position < 4; ++position)
         {
-            Energy += -g->mJ * Gridvector[point] * Gridvector[g->NextNeigbor[point][position]] - g->mB * Gridvector[point];
+            Energy += -g->getJ() * Configuration[point] * Configuration[g->getNN(point,position)] - g->getB() * Configuration[point];
         }
     }
-    return Energy/pow(2,g->Dim());
+    return Energy/g->Dim();
 }
+//Magnetisationdensity
+template<typename Val>
+double MD(Vector<Val> &Configuration, Grid *g) //Energy density
+{
+    double Magnetization = 0;
 
+    for(int point = 0; point< Configuration.Dim(); ++point)
+    {
+        Magnetization += Configuration[point];
+    }
+    return abs(Magnetization)/g->Dim();
+}
 
 
 /////////////////////////////LatticeClass/////////////////////////
@@ -188,7 +208,7 @@ Lattice<Val>::Lattice(Grid *grid) :grid(grid)
 	{
 		for(int j = 0; j<Y; ++j)
 		{
-			Lat[i][j] = i*Y +j;
+			Lat[i][j] = 0;
 		}
     }
 }
