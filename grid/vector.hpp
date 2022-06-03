@@ -21,13 +21,13 @@ class Grid
 
     std::vector<std::array<int,4>> NextNeigbor;
 
+
 	public:	
 	Grid(size_t Lx, size_t Ly);
 	Grid(size_t L);
 
 
     //Functions
-
     //Get Grid dimensions
     size_t Dim() {return m_Dim;};
     size_t DimX() {return m_dim_x;};
@@ -48,10 +48,9 @@ class Grid
 
 
     //Set NN
-    void setNN(int i, int j, double value){NextNeigbor[i][j] = value;};
-    void resizeNN(int size){NextNeigbor.resize(m_Dim);}
+    void setNN(int i, int j, int value){NextNeigbor[i][j] = value;};
+    //void resizeNN(){NextNeigbor.resize(m_Dim);}
     double getNN(int i, int j){return NextNeigbor[i][j];};
-
 
 
 
@@ -62,6 +61,7 @@ Grid::Grid(size_t L)
 	m_dim_x = L;
 	m_dim_y = L;
 	m_Dim = m_dim_x * m_dim_y;
+    NextNeigbor.resize(m_Dim);
 }
 
 Grid::Grid(size_t Lx, size_t Ly)
@@ -69,12 +69,11 @@ Grid::Grid(size_t Lx, size_t Ly)
 	m_dim_x = Lx;
 	m_dim_y = Ly;
 	m_Dim = m_dim_x * m_dim_y;
+    NextNeigbor.resize(m_Dim);
 }
 
 
 /////////////////////////////GRIDFUNCTIONS/////////////////////////
-
-
 
 
 /////////////////////////////VectorClass/////////////////////////
@@ -101,7 +100,6 @@ class Vector //1D Grid representation
 	
     void print();
 
-    double Energy();
 };
 
 //Constructors
@@ -111,8 +109,15 @@ Vector<Val>::Vector(Grid *grid) :grid(grid)
     auto DIM = grid->Dim();
     vec.resize(DIM);
 
-    for(int i = 0; i<DIM; ++i)
-    {vec[i] = i;}
+     for(int point = 0; point< DIM; ++point)
+    {
+        vec[point]=1;
+    }
+    for(int point = 0; point< DIM/3; ++point)
+    {
+        vec[3*point]=-1;
+    }
+
 }
 
 //Destructor
@@ -151,6 +156,8 @@ double ED(Vector<Val> &Configuration, Grid *g) //Energy density
         for(int position = 0; position < 4; ++position)
         {
             Energy += -g->getJ() * Configuration[point] * Configuration[g->getNN(point,position)] - g->getB() * Configuration[point];
+
+            //std::cout << Configuration[g->getNN(point,position)] <<std::endl;
         }
     }
     return Energy/g->Dim();
@@ -167,6 +174,10 @@ double MD(Vector<Val> &Configuration, Grid *g) //Energy density
     }
     return abs(Magnetization)/g->Dim();
 }
+
+
+
+
 
 
 /////////////////////////////LatticeClass/////////////////////////
@@ -284,11 +295,12 @@ Lattice<Val> transform(Vector<Val> &vec, Grid *grid) //transforms vec to lat
 
 /////////////////////////////////NextNeigbor/////////////////////
 template<typename Val>
-void NN(Grid *g)
+void NN(Grid *g, Vector<Val> &Configuration)
 {
     //NextNeigbor = Vector(top,bottom,left,right)
-    g->resizeNN(g->Dim());
+
     Lattice<Val> lat(g); //lat(x,y)
+    lat = transform(Configuration,g);
 
     const auto Lx = g->DimX();
     const auto Ly = g->DimY();
@@ -312,6 +324,102 @@ void NN(Grid *g)
             if(i == 3) //right
             {g->setNN(point,i,lat(x,(y+1)%Ly));}
         }
+    }
+}
+
+
+//Markov process//////////////////////////////////////////////////
+
+//Delta Energy
+template<typename Val>
+void q(double &q,Vector<Val> &Configuration, Grid *g, int &point)
+{
+
+    for(int i = 0; i<4; ++i)
+    {
+        q += Configuration[g->getNN(point,i)];
+        std::cout << g->getNN(point,i);
+    }
+    std::cout << std::endl;
+    q *= Configuration[point];
+}
+
+//Spinflip
+template<typename Val>
+void Spinflip(Vector<Val> &Configuration,int &point)
+{
+    Configuration[point] *= -1;
+}
+
+
+double lookuptable(double &Q,int &Spin, Grid *g)
+{
+    double exponential = 0;
+    double Bexpo = 2*g->getB()*g->getBeta() *Spin;
+
+    double q2 = exp(-4*g->getBeta()*g->getJ());
+    double q4 = exp(-8*g->getBeta()*g->getJ());
+    std::cout << q2 << "\n" <<q4 <<std::endl;
+
+    if(g->getB() == 0)
+    {
+        if(Q == 2)
+        {exponential = q2;}
+        if(Q == 4)
+        {exponential = q4;}
+    }
+    else
+    {
+        if(Q == 2)
+        {exponential = q2 *Bexpo;}
+        if(Q == 4)
+        {exponential = q4 *Bexpo;}
+    }
+    return exponential;
+
+}
+
+template<typename Val>
+void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &gen)
+{
+    int MarkovTime = 0;
+    Vector<Val> rho(g);
+    Lattice<Val> lat(g);
+    lat = transform(Configuration, g);
+    lat.print();
+    //Markov iteration
+    for(int i=0; i< Iterations; ++i)
+    {
+        std::cout << "MT: "<< MarkovTime << std::endl;
+
+        //Getting each point of Configuration
+        for(int point = 0; point < Configuration.Dim(); ++point)
+        {
+            //lat = transform(Configuration, g);
+            //lat.print();
+            Spinflip(Configuration,point); //new proposal
+
+            double Q = 0;
+            q(Q,Configuration, g, point);
+            std::cout << Q << std::endl;
+
+            if(Q > 0)
+            {
+                double RandomNumber = 0;
+                RNG_uni(RandomNumber,gen);
+                RandomNumber = RandomNumber/100;
+                double Rho = lookuptable(Q,Configuration[point],g);
+                //std::cout << "Rho: "<< Rho <<std::endl;
+                //std::cout << "RN: "<< RandomNumber <<std::endl;
+
+                if(RandomNumber > Rho)
+                    Spinflip(Configuration,point);
+            }
+            //else would be accept the new config
+
+        }
+        MarkovTime += 1;
+
     }
 }
 #endif //Grid_H
