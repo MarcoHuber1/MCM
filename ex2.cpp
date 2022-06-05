@@ -15,6 +15,7 @@ int main()
     Lattice<int> Lat(&Grid_2D);
 
 
+
     //Configuration vector
 	Vector<int> Configuration(&Grid_2D);
     Lat = transform(Configuration,&Grid_2D); //2D representation
@@ -25,9 +26,8 @@ int main()
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
     Grid_2D.setB(0);
-    Grid_2D.setT(2.6);
+    Grid_2D.setT(2.0);
     Grid_2D.setBeta(1/(Grid_2D.getT()));
-    std::cout << Grid_2D.getBeta() <<std::endl;
 
     //NextNeigbor table
     NN<int>(&Grid_2D, Configuration); //Generating table for next neigbors
@@ -41,13 +41,10 @@ int main()
 
 
     Markov(Configuration, &Grid_2D, 100000, gen);
-
-
-
-    
-    
-    
-	
+    std::cout << Grid_2D.getNN(15,0) <<std::endl;
+    std::cout << Grid_2D.getNN(15,1) <<std::endl;
+    std::cout << Grid_2D.getNN(15,2) <<std::endl;
+    std::cout << Grid_2D.getNN(15,3) <<std::endl;
 
 }
 

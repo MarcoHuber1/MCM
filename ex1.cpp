@@ -31,8 +31,8 @@ auto Cos(double x)
 int main()
 {
 
-const char* Datei = "data1.txt";
-const char* Datei2 = "data2.txt";
+const char* Datei = "IsingE.txt";
+const char* Datei2 = "IsingM.txt";
 
 double (*f)(double);
 double (*p)(double, double, double);

@@ -16,8 +16,8 @@ class Grid
     double mJ = 1;
     double mk = 1;
     double mB = 1;
-    double mbeta = -1;
-    double mT = 0;
+    double mbeta = 1/mT;
+    double mT = 1;
 
     std::vector<std::array<int,4>> NextNeigbor;
 
@@ -111,9 +111,8 @@ Vector<Val>::Vector(Grid *grid) :grid(grid)
 
      for(int point = 0; point< DIM; ++point)
     {
-        vec[point]=1;
+        vec[point]=-1; //cold start spins up
     }
-
 
 }
 
@@ -150,14 +149,14 @@ double ED(Vector<Val> &Configuration, Grid *g) //Energy density
 
     for(int point = 0; point< Configuration.Dim(); ++point)
     {
+        Energy -= g->getB() * Configuration[point];
+
         for(int position = 0; position < 4; ++position)
         {
-            Energy += -g->getJ() * Configuration[point] * Configuration[g->getNN(point,position)] - g->getB() * Configuration[point];
-
-            //std::cout << Configuration[g->getNN(point,position)] <<std::endl;
+            Energy += -1*g->getJ() * Configuration[point] * Configuration[g->getNN(point,position)];
         }
     }
-    return Energy/g->Dim();
+    return 0.5*Energy/g->Dim();
 }
 //Magnetisationdensity
 template<typename Val>
@@ -305,7 +304,7 @@ void NN(Grid *g, Vector<Val> &Configuration)
 
     for(int point = 0; point < g->Dim(); ++point)
     {
-        x = (int)point/Ly; //X position in Grid (up to down)
+        x = point/Ly; //X position in Grid (up to down)
         y = point % Ly;    //Y position in Grid (left to right)
 
         for(int i = 0; i<4; ++i)
@@ -332,7 +331,6 @@ void NN(Grid *g, Vector<Val> &Configuration)
 template<typename Val>
 void q(double &q,Vector<Val> &Configuration, Grid *g, int &point)
 {
-
     for(int i = 0; i<4; ++i)
     {q += Configuration[g->getNN(point,i)];}
 
@@ -350,7 +348,7 @@ void Spinflip(Vector<Val> &Configuration,int point)
 double lookuptable(double &Q,int &Spin, Grid *g)
 {
     double exponential = 0;
-    double Bexpo = 2*g->getB()*g->getBeta() *Spin;
+    double Bexpo = exp(2*g->getB()*g->getBeta() *Spin);
 
     double q2 = exp(-4*g->getBeta()*g->getJ());
     double q4 = exp(-8*g->getBeta()*g->getJ());
@@ -363,15 +361,15 @@ double lookuptable(double &Q,int &Spin, Grid *g)
         if(Q == 4)
         {exponential = q4;}
     }
+
     else
     {
         if(Q == 2)
-        {exponential = q2 *Bexpo;}
+        {exponential = q2 * Bexpo;}
         if(Q == 4)
-        {exponential = q4 *Bexpo;}
+        {exponential = q4 * Bexpo;}
     }
     return exponential;
-
 }
 
 template<typename Val>
@@ -379,37 +377,31 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
 {
     int MarkovTime = 0;
 
-    //Lattice<Val> lat(g);
-    //lat = transform(Configuration, g);
-    //lat.print();
-
     const char* Datei = "IsingE.txt";
     const char* Datei2 = "IsingM.txt";
     FILE * handle = fopen(Datei, "w");
     FILE * handle2 = fopen(Datei2, "w");
 
     int acceptance = 0;
-    int rejection = 0;
     int proposals = 0;
-    //Markov iteration
+
+    //Markov Process
     for(int i=0; i< Iterations; ++i)
     {
-        //std::cout << "MT: "<< MarkovTime << std::endl;
-
         fprintf(handle, "%d ",MarkovTime);
         fprintf(handle2, "%d ",MarkovTime);
+
         //Getting each point of Configuration
         for(int point = 0; point < Configuration.Dim(); ++point)
         {
+            double Q  = 0;
+            q(Q,Configuration, g, point);
             Spinflip(Configuration,point); //new proposal
 
-            proposals +=1;
-            double Q = 0;
-            q(Q,Configuration, g, point);
+            proposals += 1;
 
-
-            if(Q < 0)
-                acceptance += 1;
+            if(Q <= 0)
+            {acceptance += 1;}
 
             if(Q > 0)
             {
@@ -417,31 +409,20 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
                 RNG_uni(RandomNumber,gen);
                 RandomNumber = RandomNumber/100;
 
-                double Rho = lookuptable(Q,Configuration[point],g);//lookuptable(Q,Configuration[point],g);
+                double Rho = lookuptable(Q,Configuration[point],g);
 
                 if(RandomNumber > Rho)
-                {
-                    Spinflip(Configuration,point);
+                {Spinflip(Configuration,point);}
 
-                    //std::cout << "rejected" << std::endl;
-                    //rejection += 1;
-                }
                 else
-                {
-                    //std::cout << "accepted" << std::endl;
-                    acceptance += 1;
-
-                }
-
+                {acceptance += 1;}//else would be accept the new config
             }
-            //else would be accept the new config
-
         }
+
         fprintf(handle, "%lf\n",ED(Configuration,g));
         fprintf(handle2, "%lf\n",MD(Configuration,g));
         MarkovTime += 1;
     }
-
     std::cout << (double)acceptance/(proposals) << std::endl;
 }
 #endif //Grid_H
