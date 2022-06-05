@@ -113,10 +113,7 @@ Vector<Val>::Vector(Grid *grid) :grid(grid)
     {
         vec[point]=1;
     }
-    for(int point = 0; point< DIM/3; ++point)
-    {
-        vec[3*point]=-1;
-    }
+
 
 }
 
@@ -301,13 +298,15 @@ void NN(Grid *g, Vector<Val> &Configuration)
 
     Lattice<Val> lat(g); //lat(x,y)
 
+    int x,y = 0;
+
     const auto Lx = g->DimX();
     const auto Ly = g->DimY();
 
     for(int point = 0; point < g->Dim(); ++point)
     {
-            int x = (int)point/Ly; //X position in Grid (up to down)
-            int y = point % Ly;    //Y position in Grid (left to right)
+        x = (int)point/Ly; //X position in Grid (up to down)
+        y = point % Ly;    //Y position in Grid (left to right)
 
         for(int i = 0; i<4; ++i)
         {
@@ -342,7 +341,7 @@ void q(double &q,Vector<Val> &Configuration, Grid *g, int &point)
 
 //Spinflip
 template<typename Val>
-void Spinflip(Vector<Val> &Configuration,int &point)
+void Spinflip(Vector<Val> &Configuration,int point)
 {
     Configuration[point] *= -1;
 }
@@ -379,10 +378,15 @@ template<typename Val>
 void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &gen)
 {
     int MarkovTime = 0;
-    Vector<Val> rho(g);
-    Lattice<Val> lat(g);
-    lat = transform(Configuration, g);
+
+    //Lattice<Val> lat(g);
+    //lat = transform(Configuration, g);
     //lat.print();
+
+    const char* Datei = "IsingE.txt";
+    const char* Datei2 = "IsingM.txt";
+    FILE * handle = fopen(Datei, "w");
+    FILE * handle2 = fopen(Datei2, "w");
 
     int acceptance = 0;
     int rejection = 0;
@@ -392,16 +396,18 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     {
         //std::cout << "MT: "<< MarkovTime << std::endl;
 
+        fprintf(handle, "%d ",MarkovTime);
+        fprintf(handle2, "%d ",MarkovTime);
         //Getting each point of Configuration
         for(int point = 0; point < Configuration.Dim(); ++point)
         {
-            //lat = transform(Configuration, g);
-            //lat.print();
             Spinflip(Configuration,point); //new proposal
+
             proposals +=1;
             double Q = 0;
             q(Q,Configuration, g, point);
-            //std::cout << Q << std::endl;
+
+
             if(Q < 0)
                 acceptance += 1;
 
@@ -410,28 +416,32 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
                 double RandomNumber = 0;
                 RNG_uni(RandomNumber,gen);
                 RandomNumber = RandomNumber/100;
-                double Rho = lookuptable(Q,Configuration[point],g);
-                //std::cout << "Rho: "<< Rho <<std::endl;
-                //std::cout << "RN: "<< RandomNumber <<std::endl;
 
-                if(RandomNumber <= Rho)
+                double Rho = lookuptable(Q,Configuration[point],g);//lookuptable(Q,Configuration[point],g);
+
+                if(RandomNumber > Rho)
                 {
                     Spinflip(Configuration,point);
+
                     //std::cout << "rejected" << std::endl;
-                    acceptance += 1;
+                    //rejection += 1;
                 }
                 else
                 {
                     //std::cout << "accepted" << std::endl;
-                    rejection += 1;
+                    acceptance += 1;
+
                 }
 
             }
             //else would be accept the new config
 
         }
+        fprintf(handle, "%lf\n",ED(Configuration,g));
+        fprintf(handle2, "%lf\n",MD(Configuration,g));
         MarkovTime += 1;
     }
+
     std::cout << (double)acceptance/(proposals) << std::endl;
 }
 #endif //Grid_H
