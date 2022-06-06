@@ -372,6 +372,8 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     vector<double> ED_actual;
     vector<double> MD_actual;
 
+    double MDavg = 0;
+    double EDavg = 0;
     //Markov Process
     for(int i=0; i< Iterations; ++i)
     {
@@ -456,6 +458,9 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
 
 
     }
+    MDavg = Mean(MD_vector);
+    EDavg = Mean(ED_vector);
+
 
     VarianceE = svar(ED_vector);
     VarianceM = svar(MD_vector);
@@ -463,7 +468,7 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     double C = (pow(g->getBeta(),2)*VarianceE)/Configuration.Dim();
     double X = (g->getBeta() *VarianceM)/Configuration.Dim();
 
-    std::cout << g->getT() << " " << C <<std::endl;
+    std::cout << g->getT() << " " << MDavg <<std::endl;
     //std::cout << (double)acceptance/(proposals) << std::endl;
 }
 #endif //Grid_H
