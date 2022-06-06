@@ -26,7 +26,7 @@ int main()
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
     Grid_2D.setB(0);
-    Grid_2D.setT(0.1);
+    Grid_2D.setT(100);
     Grid_2D.setBeta(1/(Grid_2D.getT()));
 
     //NextNeigbor table
@@ -37,14 +37,17 @@ int main()
     //std::cout << energy << std::endl;
 
     double magnetization = MD<int>(Configuration, &Grid_2D);
-    //std::cout << magnetization << std::endl;
 
+    Markov(Configuration, &Grid_2D, 100000, gen);
+    //std::cout << magnetization << std::endl;
+/*
     for(double temp = 0.1; temp < 5.0; temp+=0.1)
     {
         Grid_2D.setT(temp);
         Grid_2D.setBeta(1/(Grid_2D.getT()));
         Markov(Configuration, &Grid_2D, 1000, gen);
     }
+*/
 }
 
         
