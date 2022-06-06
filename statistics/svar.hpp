@@ -8,7 +8,7 @@ using namespace std;
 template<class d>
 auto svar(vector<d> &v)
 {
-	d meanvalue = Mean(v);
+        d meanvalue = Mean(v);
         d var = 0;
 
         for(auto i:v)

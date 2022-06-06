@@ -345,51 +345,38 @@ void Spinflip(Vector<Val> &Configuration,int point)
 }
 
 
-double lookuptable(double &Q,int &Spin, Grid *g)
-{
-    double exponential = 0;
-    double Bexpo = exp(2*g->getB()*g->getBeta() *Spin);
-
-    double q2 = exp(-4*g->getBeta()*g->getJ());
-    double q4 = exp(-8*g->getBeta()*g->getJ());
-
-
-    if(g->getB() == 0)
-    {
-        if(Q == 2)
-        {exponential = q2;}
-        if(Q == 4)
-        {exponential = q4;}
-    }
-
-    else
-    {
-        if(Q == 2)
-        {exponential = q2 * Bexpo;}
-        if(Q == 4)
-        {exponential = q4 * Bexpo;}
-    }
-    return exponential;
-}
-
 template<typename Val>
 void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &gen)
 {
     int MarkovTime = 0;
-
-    const char* Datei = "IsingE.txt";
-    const char* Datei2 = "IsingM.txt";
+/*
+    const char* Datei = "IsingE2.6.txt";
+    const char* Datei2 = "IsingM2.6.txt";
     FILE * handle = fopen(Datei, "w");
     FILE * handle2 = fopen(Datei2, "w");
-
+*/
     int acceptance = 0;
     int proposals = 0;
+
+    double exponential = 0;
+
+    double q2 = exp(-4*g->getBeta()*g->getJ()); //"lookuptable"
+    double q4 = exp(-8*g->getBeta()*g->getJ());
+
+    double VarianceE = 0;
+    double VarianceM = 0;
+
+    vector<double> ED_vector;
+    vector<double> MD_vector;
+
+    vector<double> ED_actual;
+    vector<double> MD_actual;
 
     //Markov Process
     for(int i=0; i< Iterations; ++i)
     {
-        fprintf(handle, "%d ",MarkovTime);
-        fprintf(handle2, "%d ",MarkovTime);
+        //fprintf(handle, "%d ",MarkovTime);
+        //fprintf(handle2, "%d ",MarkovTime);
 
         //Getting each point of Configuration
         for(int point = 0; point < Configuration.Dim(); ++point)
@@ -401,28 +388,82 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
             proposals += 1;
 
             if(Q <= 0)
-            {acceptance += 1;}
+            {
+                acceptance += 1;
+                if(MarkovTime >= Iterations/10)
+                {
+                    ED_actual.push_back(ED(Configuration,g));
+                    MD_actual.push_back(MD(Configuration,g));
+                }
+            }
 
             if(Q > 0)
             {
+                if(g->getB() == 0)
+                {
+                    if(Q == 2)
+                    {exponential = q2;}
+                    if(Q == 4)
+                    {exponential = q4;}
+                }
+
+                else
+                {
+                    double Bexpo = exp(2*g->getB()*g->getBeta() *Configuration[point]);
+                    if(Q == 2)
+                    {exponential = q2 * Bexpo;}
+                    if(Q == 4)
+                    {exponential = q4 * Bexpo;}
+                }
+
                 double RandomNumber = 0;
                 RNG_uni(RandomNumber,gen);
                 RandomNumber = RandomNumber/100;
 
-                double Rho = lookuptable(Q,Configuration[point],g);
+                double Rho = exponential;
 
                 if(RandomNumber > Rho)
-                {Spinflip(Configuration,point);}
+                {
+                    Spinflip(Configuration,point);
+                    if(MarkovTime > Iterations/10)
+                    {
+                        ED_actual.push_back(ED(Configuration,g));
+                        MD_actual.push_back(MD(Configuration,g));
+                    }
+                }
 
                 else
-                {acceptance += 1;}//else would be accept the new config
+                {
+                    acceptance += 1;
+                    if(MarkovTime >= Iterations/10)
+                    {
+                        ED_actual.push_back(ED(Configuration,g));
+                        MD_actual.push_back(MD(Configuration,g));
+                    }
+                }//else would be accept the new config
             }
         }
 
-        fprintf(handle, "%lf\n",ED(Configuration,g));
-        fprintf(handle2, "%lf\n",MD(Configuration,g));
+        //fprintf(handle, "%lf\n",ED(Configuration,g));
+        //fprintf(handle2, "%lf\n",MD(Configuration,g));
         MarkovTime += 1;
+
+        if(MarkovTime > Iterations/10)
+        {
+            ED_vector.push_back(Mean(ED_actual));
+            MD_vector.push_back(Mean(MD_actual));
+        }
+
+
     }
-    std::cout << (double)acceptance/(proposals) << std::endl;
+
+    VarianceE = svar(ED_vector);
+    VarianceM = svar(MD_vector);
+
+    double C = (pow(g->getBeta(),2)*VarianceE)/Configuration.Dim();
+    double X = (g->getBeta() *VarianceM)/Configuration.Dim();
+
+    std::cout << g->getT() << " " << C <<std::endl;
+    //std::cout << (double)acceptance/(proposals) << std::endl;
 }
 #endif //Grid_H

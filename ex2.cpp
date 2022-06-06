@@ -11,7 +11,7 @@ int main()
     gen.seed(seed);
 
     //Set up Grid
-    Grid Grid_2D(64); //argument is lattice dimension
+    Grid Grid_2D(32); //argument is lattice dimension
     Lattice<int> Lat(&Grid_2D);
 
 
@@ -26,7 +26,7 @@ int main()
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
     Grid_2D.setB(0);
-    Grid_2D.setT(2.0);
+    Grid_2D.setT(0.1);
     Grid_2D.setBeta(1/(Grid_2D.getT()));
 
     //NextNeigbor table
@@ -34,18 +34,17 @@ int main()
     //energydensity and magnetization
 
     double energy = ED<int>(Configuration, &Grid_2D);
-    std::cout << energy << std::endl;
+    //std::cout << energy << std::endl;
 
     double magnetization = MD<int>(Configuration, &Grid_2D);
-    std::cout << magnetization << std::endl;
+    //std::cout << magnetization << std::endl;
 
-
-    Markov(Configuration, &Grid_2D, 100000, gen);
-    std::cout << Grid_2D.getNN(15,0) <<std::endl;
-    std::cout << Grid_2D.getNN(15,1) <<std::endl;
-    std::cout << Grid_2D.getNN(15,2) <<std::endl;
-    std::cout << Grid_2D.getNN(15,3) <<std::endl;
-
+    for(double temp = 0.1; temp < 5.0; temp+=0.1)
+    {
+        Grid_2D.setT(temp);
+        Grid_2D.setBeta(1/(Grid_2D.getT()));
+        Markov(Configuration, &Grid_2D, 1000, gen);
+    }
 }
 
         
