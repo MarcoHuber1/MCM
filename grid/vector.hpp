@@ -349,12 +349,12 @@ template<typename Val>
 void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &gen)
 {
     int MarkovTime = 0;
-
+/*
     const char* Datei = "IsingE100.txt";
     const char* Datei2 = "IsingM100.txt";
     FILE * handle = fopen(Datei, "w");
     FILE * handle2 = fopen(Datei2, "w");
-
+*/
     int acceptance = 0;
     int proposals = 0;
 
@@ -377,8 +377,8 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     //Markov Process
     for(int i=0; i< Iterations; ++i)
     {
-        fprintf(handle, "%d ",MarkovTime);
-        fprintf(handle2, "%d ",MarkovTime);
+        //fprintf(handle, "%d ",MarkovTime);
+        //fprintf(handle2, "%d ",MarkovTime);
 
         //Getting each point of Configuration
         for(int point = 0; point < Configuration.Dim(); ++point)
@@ -392,13 +392,13 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
             if(Q <= 0)
             {
                 acceptance += 1;
-            /*
+
                 if(MarkovTime >= Iterations/10)
                 {
-                    ED_actual.push_back(ED(Configuration,g));
-                    MD_actual.push_back(MD(Configuration,g));
+                    //ED_actual.push_back(ED(Configuration,g));
+                    //MD_actual.push_back(MD(Configuration,g));
                 }
-            */
+
             }
 
             if(Q > 0)
@@ -429,42 +429,40 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
                 if(RandomNumber > Rho)
                 {
                     Spinflip(Configuration,point);
-            /*
+
                     if(MarkovTime > Iterations/10)
                     {
-                        ED_actual.push_back(ED(Configuration,g));
-                        MD_actual.push_back(MD(Configuration,g));
+                        //ED_actual.push_back(ED(Configuration,g));
+                        //MD_actual.push_back(MD(Configuration,g));
                     }
-            */
+
                 }
 
                 else
                 {
                     acceptance += 1;
-            /*
+
                     if(MarkovTime >= Iterations/10)
                     {
-                        ED_actual.push_back(ED(Configuration,g));
-                        MD_actual.push_back(MD(Configuration,g));
+                        //ED_actual.push_back(ED(Configuration,g));
+                        //MD_actual.push_back(MD(Configuration,g));
                     }
-            */
+
                 }//else would be accept the new config
             }
         }
 
-        fprintf(handle, "%lf\n",ED(Configuration,g));
-        fprintf(handle2, "%lf\n",MD(Configuration,g));
+        //fprintf(handle, "%lf\n",ED(Configuration,g));
+        //fprintf(handle2, "%lf\n",MD(Configuration,g));
         MarkovTime += 1;
-/*
+
         if(MarkovTime > Iterations/10)
         {
-            ED_vector.push_back(Mean(ED_actual));
-            MD_vector.push_back(Mean(MD_actual));
+            ED_vector.push_back(ED(Configuration,g));
+            MD_vector.push_back(MD(Configuration,g));
         }
-
-*/
     }
-/*
+
     MDavg = Mean(MD_vector);
     EDavg = Mean(ED_vector);
 
@@ -472,12 +470,12 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     VarianceE = svar(ED_vector);
     VarianceM = svar(MD_vector);
 
-    double C = (pow(g->getBeta(),2)*VarianceE)/Configuration.Dim();
-    double X = (g->getBeta() *VarianceM)/Configuration.Dim();
+    double C = (pow(g->getBeta(),2)*VarianceE)*Configuration.Dim();
+    double X = (g->getBeta() *VarianceM)*Configuration.Dim();
 
-    //std::cout << g->getT() << " " << MDavg <<std::endl;
-*/
-    std::cout << (double)acceptance/(proposals) << std::endl;
+    std::cout << g->getT() << " " << EDavg << " " <<MDavg  <<std::endl;
+
+    //std::cout << (double)acceptance/(proposals) << std::endl;
 
 }
 #endif //Grid_H
