@@ -27,7 +27,7 @@ int main()
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
     Grid_2D.setB(0);
-    Grid_2D.setT(2.3);
+    Grid_2D.setT(2.6);
     Grid_2D.setBeta(1/(Grid_2D.getT()));
 
     //NextNeigbor table

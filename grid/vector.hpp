@@ -521,7 +521,7 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     MDavg = Mean(MD_vector);
     EDavg = Mean(ED_vector);
 
-    tau_int(ED_vector);
+    tau_int(MD_vector);
 
     VarianceE = svar(ED_vector);
     VarianceM = svar(MD_vector);
