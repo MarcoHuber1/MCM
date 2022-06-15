@@ -38,7 +38,7 @@ int main()
 
     double magnetization = MD<int>(Configuration, &Grid_2D);
 
-    Markov(Configuration, &Grid_2D, 100000, gen);
+    Metropolis(Configuration, &Grid_2D, 100000, gen);
     //std::cout << magnetization << std::endl;
 /*
     for(double temp = 0.1; temp < 5.0; temp+=0.1)

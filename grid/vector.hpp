@@ -326,7 +326,7 @@ void NN(Grid *g, Vector<Val> &Configuration)
 }
 
 
-//Markov process//////////////////////////////////////////////////
+//Metropolis//////////////////////////////////////////////////
 
 //Delta Energy
 template<typename Val>
@@ -347,7 +347,7 @@ void Spinflip(Vector<Val> &Configuration,int point)
 
 
 template<typename Val>
-void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &gen)
+void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &gen)
 {
     int MarkovTime = 0;
 /*
@@ -375,6 +375,8 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
 
     double MDavg = 0;
     double EDavg = 0;
+    
+    
     //Markov Process
     for(int i=0; i< Iterations; ++i)
     {
@@ -391,16 +393,7 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
             proposals += 1;
 
             if(Q <= 0)
-            {
-                acceptance += 1;
-
-                if(MarkovTime >= Iterations/10)
-                {
-                    //ED_actual.push_back(ED(Configuration,g));
-                    //MD_actual.push_back(MD(Configuration,g));
-                }
-
-            }
+            {acceptance += 1;}
 
             if(Q > 0)
             {
@@ -428,28 +421,10 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
                 double Rho = exponential;
 
                 if(RandomNumber > Rho)
-                {
-                    Spinflip(Configuration,point);
-
-                    if(MarkovTime > Iterations/10)
-                    {
-                        //ED_actual.push_back(ED(Configuration,g));
-                        //MD_actual.push_back(MD(Configuration,g));
-                    }
-
-                }
+                {Spinflip(Configuration,point);}
 
                 else
-                {
-                    acceptance += 1;
-
-                    if(MarkovTime >= Iterations/10)
-                    {
-                        //ED_actual.push_back(ED(Configuration,g));
-                        //MD_actual.push_back(MD(Configuration,g));
-                    }
-
-                }//else would be accept the new config
+                {acceptance += 1;}//else would be accept the new config
             }
         }
 
@@ -457,7 +432,7 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
         //fprintf(handle2, "%lf\n",MD(Configuration,g));
         MarkovTime += 1;
 
-        if(MarkovTime > Iterations/10)
+        if(MarkovTime > Iterations/10) //Expectationvalue of E and M after equilibration and after each Markov Chain
         {
             ED_vector.push_back(ED(Configuration,g));
             MD_vector.push_back(MD(Configuration,g));
@@ -467,8 +442,12 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     MDavg = Mean(MD_vector);
     EDavg = Mean(ED_vector);
 
-    double tau = tau_int(MD_vector);
-    std::cout << auto_std_err_prim(MD_vector.size(),tau, MD_vector) << std::endl;
+    double tau = tau_int(ED_vector);
+    std::cout << auto_std_err_prim(ED_vector.size(),tau, ED_vector) << std::endl;
+    std::cout << Blocking(ED_vector,15) << std::endl;
+    
+    std::cout << Bootstrap(ED_vector,tau, 10000, gen) << std::endl;
+
 
     VarianceE = svar(ED_vector);
     VarianceM = svar(MD_vector);
@@ -482,5 +461,6 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
 
 }
 
+//Heatbath//////////////////////////////////////////////////
 
 #endif //Grid_H
