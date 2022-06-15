@@ -1,6 +1,7 @@
 #ifndef Grid_H
 #define Grid_H
 #include<statistics.hpp>
+#include<autocorrelation.hpp>
 #include<cstddef>
 #include<array>
 
@@ -344,62 +345,7 @@ void Spinflip(Vector<Val> &Configuration,int point)
     Configuration[point] *= -1;
 }
 
-template<typename Val>
-double autocorrfunc(int t, std::vector<Val> &Y)
-{
-	int Dim = Y.size();
-	double prefactor = (double)1/(Dim-t);
-	double rho_t = 0;
-	double C_t = 0;
-	double C_0 = 0;
-	
-	double y_minus = 0;
-	double y_plus = 0;
-	
-	// calculation of y+ and y-
-	for(int i = 0; i<(Dim-t); ++i)
-	{
-		y_minus += Y[i];
-		y_plus += Y[i+t];
-	}
-	y_minus *= prefactor;
-	y_plus *= prefactor;
 
-	//std::cout << t << " " << y_minus << " " << y_plus << std::endl;
-	
-	//calculation of C_0
-	for(int j = 0; j<Dim; ++j)
-	{C_0 += (Y[j] - y_minus) * (Y[j] - y_plus); }
-	C_0 *= (double)1/Dim;
-	
-	//calculation of C_t
-	for(int j = 0; j<(Dim-t); ++j)
-	{C_t += (Y[j] - y_minus) * (Y[j+t] - y_plus); }
-	C_t *= prefactor;
-	
-	rho_t = C_t/C_0;
-	//std::cout << rho_t <<std::endl;
-	return rho_t;
-	
-}
-		
-template<typename Val>
-double tau_int(std::vector<Val> &V)
-{
-	double tau = 0.5;
-	int t = 0;
-	while(true)
-	{
-		double Contribution = autocorrfunc(t, V);
-		if(Contribution < 0)
-		break;
-		
-		tau += Contribution;
-		t += 1;
-		std:: cout << t << " " <<  Contribution <<std::endl;
-	}
-	return tau;
-}
 template<typename Val>
 void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &gen)
 {
@@ -521,7 +467,8 @@ void Markov(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &g
     MDavg = Mean(MD_vector);
     EDavg = Mean(ED_vector);
 
-    tau_int(MD_vector);
+    double tau = tau_int(MD_vector);
+    std::cout << auto_std_err_prim(MD_vector.size(),tau, MD_vector) << std::endl;
 
     VarianceE = svar(ED_vector);
     VarianceM = svar(MD_vector);
