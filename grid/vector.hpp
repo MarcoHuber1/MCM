@@ -370,8 +370,9 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
     vector<double> ED_vector;
     vector<double> MD_vector;
 
-    vector<double> ED_actual;
-    vector<double> MD_actual;
+    vector<double> ED_vector_squared;
+    vector<double> MD_vector_squared;
+
 
     double MDavg = 0;
     double EDavg = 0;
@@ -436,17 +437,43 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
         {
             ED_vector.push_back(ED(Configuration,g));
             MD_vector.push_back(MD(Configuration,g));
+
+            ED_vector_squared.push_back(pow(ED(Configuration,g),2));
+            MD_vector_squared.push_back(pow(MD(Configuration,g),2));
         }
     }
 
     MDavg = Mean(MD_vector);
     EDavg = Mean(ED_vector);
 
-    double tau = tau_int(ED_vector);
-    std::cout << auto_std_err_prim(ED_vector.size(),tau, ED_vector) << std::endl;
-    std::cout << Blocking(ED_vector,15) << std::endl;
+    vector<double> C_eff;
+    vector<double> X_eff;
+
+    for(int m = 0; m < ED_vector.size(); ++m)
+    {
+        C_eff.push_back(pow(g->getBeta(),2)* Configuration.Dim() * (ED_vector_squared[m] - 2 * EDavg * ED_vector[m]));
+        X_eff.push_back(g->getBeta() * Configuration.Dim() * (MD_vector_squared[m] - 2 * MDavg * MD_vector[m]));
+    }
+
+    double tau_E = tau_int(ED_vector);
+    double tau_E_squared = tau_int(ED_vector_squared);
+
+    double tau_M = tau_int(MD_vector);
+    double tau_M_squared = tau_int(MD_vector_squared);
+
+    double tau_C = tau_int(C_eff);
+    double tau_X = tau_int(X_eff);
+
+
+    //std::cout << tau_C << " " << tau_X << std::endl;
+    //std::cout << "tau C: "<<auto_std_err_prim(C_eff.size(),tau_C, C_eff) << std::endl;
+    std::cout << "tau X: "<<auto_std_err_prim(X_eff.size(),tau_X, X_eff) << std::endl;
+    //std::cout << "tau MD: "<< auto_std_err_prim(MD_vector.size(),tau_M, MD_vector) << std::endl;
+    //std::cout << "tau MD: "<< auto_std_err_prim(ED_vector.size(),tau_M, ED_vector) << std::endl;
+    //std::cout << Blocking(ED_vector,20, pow(g->getBeta(),2) * Configuration.Dim()) << std::endl;
+    std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
     
-    std::cout << Bootstrap(ED_vector,tau, 10000, gen) << std::endl;
+    //std::cout << Bootstrap(ED_vector,tau, 10000, gen) << std::endl;
 
 
     VarianceE = svar(ED_vector);

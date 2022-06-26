@@ -5,7 +5,7 @@
 
 //Blocking method//////////////////////////////////////////////////
 template<typename Val>
-double Blocking(std::vector<Val> Density, int Blocksize)
+double Blocking(std::vector<Val> Density, int Blocksize, double a)
 {
     std::vector<Val> Q_block;
     
@@ -22,7 +22,7 @@ double Blocking(std::vector<Val> Density, int Blocksize)
         {
             Q[i] = Density[(block * N/Blocksize)+i];
         }
-        Q_block.push_back(Mean(Q));
+        Q_block.push_back(a * svar(Q));
     }
     
     //Compute block average for blockvariance

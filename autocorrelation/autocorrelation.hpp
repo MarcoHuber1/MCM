@@ -56,7 +56,7 @@ double tau_int(std::vector<Val> &V)
 		t += 1;
 		//std:: cout << t << " " <<  Contribution <<std::endl;
 	}
-	std::cout << tau << std::endl;
+	//std::cout << tau << std::endl;
 	return tau;
 }
 
