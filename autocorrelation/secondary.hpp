@@ -47,7 +47,7 @@ double Blocking(std::vector<Val> Density, int Blocksize, double a)
 
 //Bootstrap//////////////////////////////////////////////////
 template<typename Val>
-double Bootstrap(std::vector<Val> Density, double tau, int M, std::mt19937 gen)
+double Bootstrap(std::vector<Val> Density, double tau, int M, std::mt19937 gen, double a)
 {
     int N = Density.size();
     int N_indep = N/(2*tau);
@@ -57,9 +57,8 @@ double Bootstrap(std::vector<Val> Density, double tau, int M, std::mt19937 gen)
     std::vector<Val> Sample;
     for(int i = 0; i< N_indep; ++i)
     {
-        Sample.push_back(i*2*tau);
+        Sample.push_back(Density[i*2*tau]);
     }
-    
     
     std::vector<Val> Q_boot;
     
@@ -69,13 +68,13 @@ double Bootstrap(std::vector<Val> Density, double tau, int M, std::mt19937 gen)
         std::vector<Val> Q;
         Q.resize(N_indep);
         
-        //
+        //giving each sample random numbers of density
         for(int i = 0; i < N_indep; ++i)
         {
             int randomplace = unidist(gen);
-            Q[i] = Density[randomplace];
+            Q[i] = Sample[randomplace];
         }
-        Q_boot.push_back(Mean(Q)); //give back mean of each bootstrap sample
+        Q_boot.push_back(svar(Q) * a); //give back mean of each bootstrap sample
     }
     
     //Compute Bootstrap average
