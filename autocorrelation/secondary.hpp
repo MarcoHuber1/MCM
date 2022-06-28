@@ -59,24 +59,22 @@ double Bootstrap(std::vector<Val> Density, double tau, int M, std::mt19937 gen, 
     {
         Sample.push_back(Density[i*2*tau]);
     }
-    
     std::vector<Val> Q_boot;
     
     //generating M bootstrap samples Q
     for(int j = 0; j < M; ++j)
     {
         std::vector<Val> Q;
-        Q.resize(N_indep);
         
         //giving each sample random numbers of density
         for(int i = 0; i < N_indep; ++i)
         {
             int randomplace = unidist(gen);
-            Q[i] = Sample[randomplace];
+            Q.push_back(Sample[randomplace]);
         }
-        Q_boot.push_back(svar(Q) * a); //give back mean of each bootstrap sample
+        Q_boot.push_back(svar(Q)*a);
     }
-    
+
     //Compute Bootstrap average
     double Bootavg = 0;
     for(int m = 0; m<M; ++m)
@@ -91,6 +89,6 @@ double Bootstrap(std::vector<Val> Density, double tau, int M, std::mt19937 gen, 
     {
         BootDeviation += pow(Q_boot[n] - Bootavg,2);
     }
-    return sqrt(BootDeviation/M);
+    return sqrt(BootDeviation/(M));
 }
 #endif // autocorrelation_secondary_H

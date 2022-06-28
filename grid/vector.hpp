@@ -470,16 +470,18 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
     std::cout << "tau X: "<<auto_std_err_prim(X_eff.size(),tau_X, X_eff) << std::endl;
     //std::cout << "tau MD: "<< auto_std_err_prim(MD_vector.size(),tau_M, MD_vector) << std::endl;
     //std::cout << "tau MD: "<< auto_std_err_prim(ED_vector.size(),tau_M, ED_vector) << std::endl;
-    //std::cout << Blocking(ED_vector,20, pow(g->getBeta(),2) * Configuration.Dim()) << std::endl;
     std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
+    //std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
     
-    //std::cout << Bootstrap(ED_vector,tau, 10000, gen) << std::endl;
+    std::cout << Bootstrap(MD_vector,tau_M, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
+    std::cout << Bootstrap(MD_vector,tau_X, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
 
 
     VarianceE = svar(ED_vector);
     VarianceM = svar(MD_vector);
 
     double C = (pow(g->getBeta(),2)*VarianceE)*Configuration.Dim();
+
     double X = (g->getBeta() *VarianceM)*Configuration.Dim();
 
     //std::cout << g->getT() << " " << EDavg << " " <<MDavg  <<std::endl;
