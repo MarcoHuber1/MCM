@@ -606,8 +606,8 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
     sweep += 1;
     if(sweep > Iterations/10) //Expectationvalue of E and M after equilibration and after each Markov Chain
         {
-            ED1_vector.push_back(ED_v(Cluster,g));
-            MD1_vector.push_back(MD_v(Cluster,g));
+            ED1_vector.push_back(ED(Configuration,g));
+            MD1_vector.push_back(MD(Configuration,g));
         }
 
     }
