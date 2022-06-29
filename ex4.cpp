@@ -11,7 +11,7 @@ int main()
     gen.seed(seed);
 
     //Set up Grid
-    Grid Grid_2D(10); //argument is lattice dimension
+    Grid Grid_2D(64); //argument is lattice dimension
     Lattice<int> Lat(&Grid_2D);
 
 
@@ -19,7 +19,7 @@ int main()
     //Configuration vector
     Vector<int> Configuration(&Grid_2D, gen);
     Lat = transform(Configuration,&Grid_2D); //2D representation
-    Lat.print();
+    //Lat.print();
 
     /////////////////parameters//////////////
     double kb = 1.3806488 * pow(10,-23);
@@ -38,7 +38,7 @@ int main()
 
     double magnetization = MD<int>(Configuration, &Grid_2D);
 
-    Wolff(Configuration, &Grid_2D, 2, gen);
+    Wolff(Configuration, &Grid_2D, 10000, gen);
     //std::cout << magnetization << std::endl;
 /*
     for(double temp = 0.1; temp < 5.0; temp+=0.1)

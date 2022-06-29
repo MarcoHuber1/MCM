@@ -501,7 +501,8 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
     {
         C_eff.push_back(pow(g->getBeta(),2)* Configuration.Dim() * (ED_vector_squared[m] - 2 * EDavg * ED_vector[m]));
         X_eff.push_back(g->getBeta() * Configuration.Dim() * (MD_vector_squared[m] - 2 * MDavg * MD_vector[m]));
-    }
+    }    
+  
 
     double tau_E = tau_int(ED_vector);
     double tau_E_squared = tau_int(ED_vector_squared);
@@ -548,14 +549,18 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
     std::uniform_int_distribution<int> unidist(0,Configuration.Dim()-1);
     
     //accept probability
-    double P_add = 1 - exp(-2*g->getBeta()*g->getT());
+    double P_add = 1 - exp(-2*g->getBeta());
+    
+    vector<double> ED1_vector;
+    vector<double> MD1_vector;
     
     for(int i = 0; i < Iterations; ++i)
     {   
         std::vector<Val> Cluster;
         
         //choose random site
-        int randomsite = unidist(gen);
+        //int randomsite = unidist(gen);
+        int randomsite = 0;
         Cluster.push_back(randomsite);
         
         
@@ -563,12 +568,13 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
         int actual = 0;
         
         int spin = Configuration[randomsite];
+        //std::cout << spin << std::endl;
         Spinflip(Configuration,randomsite);
         
-        while(actual != new_entries)
+        while(actual < new_entries)
         {
             randomsite = Cluster[actual];
-            //std::cout << randomsite << std::endl;
+
             //go through the neigbors
             for(int neighbor = 0; neighbor < 4; ++neighbor)
             {
@@ -582,22 +588,31 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
                     RN = RN/100;
            
                     //add to cluster if RN<=P_add
+                  
                     if(RN <= P_add)
                     {
-                        Spinflip(Configuration,Configuration[g->getNN(randomsite,neighbor)]);
+                        int nn = g->getNN(randomsite,neighbor);
+                        Spinflip(Configuration, nn);
                         
                         Cluster.push_back(g->getNN(randomsite,neighbor));
                         new_entries += 1;
                     }
                 }
             }
+            
             actual += 1;
-            std::cout << actual << " "<< new_entries << std::endl;
+
         }
-    //std::cout << actual << " " << new_entries << std::endl;
     sweep += 1;
-    std::cout << std::endl;
+    if(sweep > Iterations/10) //Expectationvalue of E and M after equilibration and after each Markov Chain
+        {
+            ED1_vector.push_back(ED_v(Cluster,g));
+            MD1_vector.push_back(MD_v(Cluster,g));
+        }
+
     }
+    std::cout << Mean(ED1_vector) << std::endl;
+    std::cout << Mean(MD1_vector) << std::endl;
         
 }
 #endif //Grid_H
