@@ -89,6 +89,7 @@ class Vector //1D Grid representation
     public:
     //Constructors
     Vector(Grid *grid);
+    Vector(Grid *grid, std::mt19937 &gen);
 		
     //Destructor
     ~Vector();
@@ -113,6 +114,24 @@ Vector<Val>::Vector(Grid *grid) :grid(grid)
      for(int point = 0; point< DIM; ++point)
     {
         vec[point]=-1; //cold start spins up
+    }
+
+}
+
+template<typename Val>
+Vector<Val>::Vector(Grid *grid,std::mt19937 &gen) :grid(grid)
+{
+    auto DIM = grid->Dim();
+    vec.resize(DIM);
+    std::uniform_int_distribution<int> unidist(0,100);
+    
+     for(int point = 0; point< DIM; ++point)
+    {
+        double RN = unidist(gen);
+        if(RN <= 50)
+        vec[point]=-1; //cold start spins up
+        else
+        vec[point]=1;
     }
 
 }
@@ -159,6 +178,23 @@ double ED(Vector<Val> &Configuration, Grid *g) //Energy density
     }
     return 0.5*Energy/g->Dim();
 }
+
+template<typename Val>
+double ED_v(std::vector<Val> &Configuration, Grid *g) //Energy density
+{
+    double Energy = 0;
+
+    for(int point = 0; point< Configuration.size(); ++point)
+    {
+        Energy -= g->getB() * Configuration[point];
+
+        for(int position = 0; position < 4; ++position)
+        {
+            Energy += -1*g->getJ() * Configuration[point] * Configuration[g->getNN(point,position)];
+        }
+    }
+    return 0.5*Energy/g->Dim();
+}
 //Magnetisationdensity
 template<typename Val>
 double MD(Vector<Val> &Configuration, Grid *g) //Energy density
@@ -166,6 +202,18 @@ double MD(Vector<Val> &Configuration, Grid *g) //Energy density
     double Magnetization = 0;
 
     for(int point = 0; point< Configuration.Dim(); ++point)
+    {
+        Magnetization += Configuration[point];
+    }
+    return abs(Magnetization)/g->Dim();
+}
+
+template<typename Val>
+double MD_v(std::vector<Val> &Configuration, Grid *g) //Energy density
+{
+    double Magnetization = 0;
+
+    for(int point = 0; point< Configuration.size(); ++point)
     {
         Magnetization += Configuration[point];
     }
@@ -490,6 +538,66 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
 
 }
 
-//Heatbath//////////////////////////////////////////////////
+//WOLFF algorithm//////////////////////////////////////////////////
 
+template<typename Val>
+void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &gen)
+{
+    int sweep = 0;
+    
+    std::uniform_int_distribution<int> unidist(0,Configuration.Dim()-1);
+    
+    //accept probability
+    double P_add = 1 - exp(-2*g->getBeta()*g->getT());
+    
+    for(int i = 0; i < Iterations; ++i)
+    {   
+        std::vector<Val> Cluster;
+        
+        //choose random site
+        int randomsite = unidist(gen);
+        Cluster.push_back(randomsite);
+        
+        
+        int new_entries = 1;
+        int actual = 0;
+        
+        int spin = Configuration[randomsite];
+        Spinflip(Configuration,randomsite);
+        
+        while(actual != new_entries)
+        {
+            randomsite = Cluster[actual];
+            //std::cout << randomsite << std::endl;
+            //go through the neigbors
+            for(int neighbor = 0; neighbor < 4; ++neighbor)
+            {
+                //accept reject for all 4 neigbors
+                //-->if spin is the same, accept reject step
+                if(Configuration[g->getNN(randomsite,neighbor)] == spin)
+                {
+                    //Random number generator
+                    double RN = 0;
+                    RNG_uni(RN,gen);
+                    RN = RN/100;
+           
+                    //add to cluster if RN<=P_add
+                    if(RN <= P_add)
+                    {
+                        Spinflip(Configuration,Configuration[g->getNN(randomsite,neighbor)]);
+                        
+                        Cluster.push_back(g->getNN(randomsite,neighbor));
+                        new_entries += 1;
+                    }
+                }
+            }
+            actual += 1;
+            std::cout << actual << " "<< new_entries << std::endl;
+        }
+    //std::cout << actual << " " << new_entries << std::endl;
+    sweep += 1;
+    std::cout << std::endl;
+    }
+        
+}
 #endif //Grid_H
