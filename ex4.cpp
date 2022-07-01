@@ -38,15 +38,32 @@ int main()
 
     double magnetization = MD<int>(Configuration, &Grid_2D);
 
-    Wolff(Configuration, &Grid_2D, 10000, gen);
+
     //std::cout << magnetization << std::endl;
-/*
-    for(double temp = 0.1; temp < 5.0; temp+=0.1)
+
+    for(double temp = 1; temp <= 4.0; temp+=0)
     {
-        Grid_2D.setT(temp);
-        Grid_2D.setBeta(1/(Grid_2D.getT()));
-        Markov(Configuration, &Grid_2D, 100000, gen);
+
+        if(temp>2.1 && temp<2.4)
+        {
+            Grid_2D.setT(temp);
+            Grid_2D.setBeta(1/(Grid_2D.getT()));
+
+            Metropolis(Configuration, &Grid_2D, 100000, gen);
+            //Wolff(Configuration, &Grid_2D, 10000, gen);
+            temp += 0.02;
+        }
+        else
+        {
+            Grid_2D.setT(temp);
+            Grid_2D.setBeta(1/(Grid_2D.getT()));
+
+            Metropolis(Configuration, &Grid_2D, 100000, gen);
+            //Wolff(Configuration, &Grid_2D, 10000, gen);
+            temp += 0.1;
+        }
+
     }
-    */
+
 
 }

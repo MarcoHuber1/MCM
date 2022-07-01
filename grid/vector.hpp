@@ -513,29 +513,27 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
     double tau_C = tau_int(C_eff);
     double tau_X = tau_int(X_eff);
 
+    double sigma_E = auto_std_err_prim(ED_vector.size(),tau_E, ED_vector);
+    double sigma_M = auto_std_err_prim(MD_vector.size(),tau_M, MD_vector);
+    double sigma_C = auto_std_err_prim(C_eff.size(),tau_C, C_eff);
+    double sigma_X = auto_std_err_prim(X_eff.size(),tau_X, X_eff);
+
+    double C = pow(g->getBeta(),2)* Configuration.Dim() * svar(ED_vector);
+    double X = g->getBeta() * Configuration.Dim() * svar(MD_vector);
 
     //std::cout << tau_C << " " << tau_X << std::endl;
     //std::cout << "tau C: "<<auto_std_err_prim(C_eff.size(),tau_C, C_eff) << std::endl;
-    std::cout << "tau X: "<<auto_std_err_prim(X_eff.size(),tau_X, X_eff) << std::endl;
+    //std::cout << "tau X: "<<auto_std_err_prim(X_eff.size(),tau_X, X_eff) << std::endl;
     //std::cout << "tau MD: "<< auto_std_err_prim(MD_vector.size(),tau_M, MD_vector) << std::endl;
     //std::cout << "tau MD: "<< auto_std_err_prim(ED_vector.size(),tau_M, ED_vector) << std::endl;
-    std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
+    //std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
     //std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
     
-    std::cout << Bootstrap(MD_vector,tau_M, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
-    std::cout << Bootstrap(MD_vector,tau_X, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
+    //std::cout << Bootstrap(MD_vector,tau_M, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
+    //std::cout << Bootstrap(MD_vector,tau_X, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
+    //std::cout << g->getT() << " " << EDavg << " " << MDavg << " " << C <<  " " << X << std::endl;
+    std::cout << g->getT() << " " <<sigma_E << " " << sigma_M << " " << sigma_C <<  " " << sigma_X << std::endl;
 
-
-    VarianceE = svar(ED_vector);
-    VarianceM = svar(MD_vector);
-
-    double C = (pow(g->getBeta(),2)*VarianceE)*Configuration.Dim();
-
-    double X = (g->getBeta() *VarianceM)*Configuration.Dim();
-
-    //std::cout << g->getT() << " " << EDavg << " " <<MDavg  <<std::endl;
-
-    //std::cout << (double)acceptance/(proposals) << std::endl;
 
 }
 
@@ -553,6 +551,9 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
     
     vector<double> ED1_vector;
     vector<double> MD1_vector;
+
+    vector<double> ED1_vector_squared;
+    vector<double> MD1_vector_squared;
     
     for(int i = 0; i < Iterations; ++i)
     {   
@@ -604,15 +605,38 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
 
         }
     sweep += 1;
+
     if(sweep > Iterations/10) //Expectationvalue of E and M after equilibration and after each Markov Chain
         {
             ED1_vector.push_back(ED(Configuration,g));
             MD1_vector.push_back(MD(Configuration,g));
+
+            ED1_vector_squared.push_back(pow(ED(Configuration,g),2));
+            MD1_vector_squared.push_back(pow(MD(Configuration,g),2));
         }
 
     }
-    std::cout << Mean(ED1_vector) << std::endl;
-    std::cout << Mean(MD1_vector) << std::endl;
+    double MDavg1 = Mean(MD1_vector);
+    double EDavg1 = Mean(ED1_vector);
+
+    vector<double> C_eff1;
+    vector<double> X_eff1;
+
+    for(int m = 0; m < ED1_vector.size(); ++m)
+    {
+        C_eff1.push_back(pow(g->getBeta(),2)* Configuration.Dim() * (ED1_vector_squared[m] - 2 * EDavg1 * ED1_vector[m]));
+        X_eff1.push_back(g->getBeta() * Configuration.Dim() * (MD1_vector_squared[m] - 2 * MDavg1 * MD1_vector[m]));
+    }
+
+    double tau_E1 = tau_int(ED1_vector);
+    double tau_E_squared1 = tau_int(ED1_vector_squared);
+
+    double tau_M1 = tau_int(MD1_vector);
+    double tau_M_squared1 = tau_int(MD1_vector_squared);
+
+    double tau_C1 = tau_int(C_eff1);
+    double tau_X1 = tau_int(X_eff1);
+
         
 }
 #endif //Grid_H
