@@ -17,11 +17,11 @@ int main()
 
 
     //Configuration vector
-    Vector<int> Configuration(&Grid_2D, gen);
+    Vector<int> Configuration(&Grid_2D);
     Lat = transform(Configuration,&Grid_2D); //2D representation
     //Lat.print();
 
-    /////////////////parameters//////////////
+    /////////////////parameters for Grid//////////////
     double kb = 1.3806488 * pow(10,-23);
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
@@ -30,7 +30,7 @@ int main()
     Grid_2D.setBeta(1/(Grid_2D.getT()));
 
     //NextNeigbor table
-    NN<int>(&Grid_2D, Configuration); //Generating table for next neigbors
+    NN<int>(&Grid_2D); //Generating table for next neigbors
     //energydensity and magnetization
 
     double energy = ED<int>(Configuration, &Grid_2D);
@@ -40,7 +40,7 @@ int main()
 
 
     //std::cout << magnetization << std::endl;
-
+/*
     for(double temp = 1; temp <= 4.0; temp+=0)
     {
 
@@ -49,8 +49,8 @@ int main()
             Grid_2D.setT(temp);
             Grid_2D.setBeta(1/(Grid_2D.getT()));
 
-            Metropolis(Configuration, &Grid_2D, 100000, gen);
-            //Wolff(Configuration, &Grid_2D, 10000, gen);
+            //Metropolis(Configuration, &Grid_2D, 10000, gen);
+            Wolff(Configuration, &Grid_2D, 100000, gen);
             temp += 0.02;
         }
         else
@@ -58,12 +58,23 @@ int main()
             Grid_2D.setT(temp);
             Grid_2D.setBeta(1/(Grid_2D.getT()));
 
-            Metropolis(Configuration, &Grid_2D, 100000, gen);
-            //Wolff(Configuration, &Grid_2D, 10000, gen);
+            //Metropolis(Configuration, &Grid_2D, 10000, gen);
+            Wolff(Configuration, &Grid_2D, 100000, gen);
             temp += 0.1;
         }
 
     }
+*/
+   for(double temp = 1; temp <= 4.0; temp+=0)
+    {
+            Vector<int> Configuration(&Grid_2D);
+            Grid_2D.setT(temp);
+            Grid_2D.setBeta(1/temp);
 
+            Metropolis(Configuration, &Grid_2D, 20000, gen);
+            //Wolff(Configuration, &Grid_2D, 10000, gen);
+            temp += 0.02;
+
+    }
 
 }

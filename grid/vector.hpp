@@ -16,9 +16,10 @@ class Grid
 
     double mJ = 1;
     double mk = 1;
-    double mB = 1;
-    double mbeta = 1/mT;
+    double mB = 0;
     double mT = 1;
+    double mbeta = 1/mT;
+
 
     std::vector<std::array<int,4>> NextNeigbor;
 
@@ -340,7 +341,7 @@ Lattice<Val> transform(Vector<Val> &vec, Grid *grid) //transforms vec to lat
 
 /////////////////////////////////NextNeigbor/////////////////////
 template<typename Val>
-void NN(Grid *g, Vector<Val> &Configuration)
+void NN(Grid *g)
 {
     //NextNeigbor = Vector(top,bottom,left,right)
 
@@ -481,7 +482,7 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
         //fprintf(handle2, "%lf\n",MD(Configuration,g));
         MarkovTime += 1;
 
-        if(MarkovTime > Iterations/10) //Expectationvalue of E and M after equilibration and after each Markov Chain
+        if(MarkovTime > 5000) //Expectationvalue of E and M after equilibration and after each Markov Chain
         {
             ED_vector.push_back(ED(Configuration,g));
             MD_vector.push_back(MD(Configuration,g));
@@ -531,8 +532,9 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
     
     //std::cout << Bootstrap(MD_vector,tau_M, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
     //std::cout << Bootstrap(MD_vector,tau_X, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
-    //std::cout << g->getT() << " " << EDavg << " " << MDavg << " " << C <<  " " << X << std::endl;
-    std::cout << g->getT() << " " <<sigma_E << " " << sigma_M << " " << sigma_C <<  " " << sigma_X << std::endl;
+    std::cout << g->getT() << " " << EDavg << " " << MDavg << " " << C <<  " " << X << std::endl;
+    //std::cout << g->getT() << " " <<sigma_E << " " << sigma_M << " " << sigma_C <<  " " << sigma_X << std::endl;
+    //std::cout << g->getT() << " " <<tau_E << " " << tau_M << " " << tau_C <<  " " << tau_X << std::endl;
 
 
 }
@@ -551,6 +553,7 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
     
     vector<double> ED1_vector;
     vector<double> MD1_vector;
+    vector<double> CS_vector;
 
     vector<double> ED1_vector_squared;
     vector<double> MD1_vector_squared;
@@ -560,8 +563,7 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
         std::vector<Val> Cluster;
         
         //choose random site
-        //int randomsite = unidist(gen);
-        int randomsite = 0;
+        int randomsite = unidist(gen);
         Cluster.push_back(randomsite);
         
         
@@ -569,7 +571,7 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
         int actual = 0;
         
         int spin = Configuration[randomsite];
-        //std::cout << spin << std::endl;
+
         Spinflip(Configuration,randomsite);
         
         while(actual < new_entries)
@@ -589,7 +591,6 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
                     RN = RN/100;
            
                     //add to cluster if RN<=P_add
-                  
                     if(RN <= P_add)
                     {
                         int nn = g->getNN(randomsite,neighbor);
@@ -606,13 +607,15 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
         }
     sweep += 1;
 
-    if(sweep > Iterations/10) //Expectationvalue of E and M after equilibration and after each Markov Chain
+    if(sweep > 2000) //Expectationvalue of E and M after equilibration and after each Markov Chain
         {
             ED1_vector.push_back(ED(Configuration,g));
             MD1_vector.push_back(MD(Configuration,g));
 
             ED1_vector_squared.push_back(pow(ED(Configuration,g),2));
             MD1_vector_squared.push_back(pow(MD(Configuration,g),2));
+
+            CS_vector.push_back(Cluster.size());
         }
 
     }
@@ -636,6 +639,32 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
 
     double tau_C1 = tau_int(C_eff1);
     double tau_X1 = tau_int(X_eff1);
+    double tau_CS = tau_int(CS_vector);
+
+    double sigma_E1 = auto_std_err_prim(ED1_vector.size(),tau_E1, ED1_vector);
+    double sigma_M1 = auto_std_err_prim(MD1_vector.size(),tau_M1, MD1_vector);
+    double sigma_C1 = auto_std_err_prim(C_eff1.size(),tau_C1, C_eff1);
+    double sigma_X1 = auto_std_err_prim(X_eff1.size(),tau_X1, X_eff1);
+
+    double C1 = pow(g->getBeta(),2)* Configuration.Dim() * svar(ED1_vector);
+    double X1 = g->getBeta() * Configuration.Dim() * svar(MD1_vector);
+    double CS = Mean(CS_vector)/(double) Configuration.Dim();
+    double CS_error = auto_std_err_prim(CS_vector.size(),tau_CS, CS_vector);
+
+    //std::cout << tau_C << " " << tau_X << std::endl;
+    //std::cout << "tau C: "<<auto_std_err_prim(C_eff.size(),tau_C, C_eff) << std::endl;
+    //std::cout << "tau X: "<<auto_std_err_prim(X_eff.size(),tau_X, X_eff) << std::endl;
+    //std::cout << "tau MD: "<< auto_std_err_prim(MD_vector.size(),tau_M, MD_vector) << std::endl;
+    //std::cout << "tau MD: "<< auto_std_err_prim(ED_vector.size(),tau_M, ED_vector) << std::endl;
+    //std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
+    //std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
+
+    //std::cout << Bootstrap(MD_vector,tau_M, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
+    //std::cout << Bootstrap(MD_vector,tau_X, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
+    std::cout << g->getT() << " " << EDavg1 << " " << MDavg1 << " " << C1 <<  " " << X1 << std::endl;
+    //std::cout << g->getT() << " " <<sigma_E1 << " " << sigma_M1 << " " << sigma_C1 <<  " " << sigma_X1 << std::endl;
+    //std::cout << g->getT() << " " <<tau_E1 << " " << tau_M1 << " " << tau_C1 <<  " " << tau_X1 << std::endl;
+    //std::cout << g->getT() <<" "<< CS << " " << CS_error << " " << tau_CS << std:: endl;
 
         
 }
