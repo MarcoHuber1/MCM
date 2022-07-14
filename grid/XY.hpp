@@ -337,7 +337,7 @@ void NN(Grid_XY *g, Spin_vector<Val> &Configuration)
 
 //HMC-Method//////////////////////////////////////////////////
 template<typename Val>
-void Guidance_Calc(std::mt19937 gen; Spin_vector<Val> p;
+void Guidance_Calc(std::mt19937 gen, Spin_vector<Val> p, Spin_vector<Val> Theta, double &p_con_squared, double &H_g, Grid_XY g)
 {
     //Conjugate Momenta and Guidance Hamiltonian
     std::normal_distribution<> nd{0,1};
@@ -349,13 +349,14 @@ void Guidance_Calc(std::mt19937 gen; Spin_vector<Val> p;
     {p_con_squared += pow(p[i],2);}
     
     //Guidance Hamiltonian
-    double H_g = p_con_squared/2 + ED_XY(Theta,g);
+    H_g = p_con_squared/2 + ED_XY(Theta,g);
     std::cout << p_con_squared << std::endl;
 }
 template<typename Val>
-void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int t_F_Max)
+void Leapfrog(Spin_vector<Val> Theta, Spin_vector<Val> p, int t_F_Max)
 {
 }
+
 template<typename Val>
 void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int t_F_Max)
 {
@@ -363,20 +364,30 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int t_F_Max)
     {
     //generalized Coord. q are the Values of Spin_vector Theta
     //Conjugate Momenta and Guidance Hamiltonian
-    double p_con_squared = 0;
-    double p_con = 0;
+    Spin_vector p_i_initial(g);
+    Spin_vector p_i_final(g);
+    double p_con_squared_initial = 0;
+    double p_con_squared_final = 0;
     double H_g_initial = 0;
+    double H_g_final = 0;
     
+    //Initial values:
+    Guidance_Calc(gen,p_i_initial,Theta,p_con_squared_initial,H_g_initial, g);
 
     
     //Leapfrog
+
+    //Make new vector for final proposal and give it the starting values
     Spin_vector<Val> Final(g);
     for(int index = 0; index < Theta.Dim(); ++index)
     {Final[index] = Theta[index];}
     
-    Leapfrog(Theta, );
-    //
-    double dH
+    //Leapfrog Algo
+    Leapfrog(Final, p_i_initial, t_F_Max);
+    Guidance_Calc(gen,p_i_final,Final, p_con_squared_initial, H_g_final);
+
+    //Accept reject method
+    //double dH
     
     
     
