@@ -534,9 +534,9 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
     
     //std::cout << Bootstrap(MD_vector,tau_M, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
     //std::cout << Bootstrap(MD_vector,tau_X, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
-    std::cout << g->getT() << " " << EDavg << " " << MDavg << " " << C <<  " " << X << std::endl;
+    //std::cout << g->getT() << " " << EDavg << " " << MDavg << " " << C <<  " " << X << std::endl;
     //std::cout << g->getT() << " " <<sigma_E << " " << sigma_M << " " << sigma_C <<  " " << sigma_X << std::endl;
-    //std::cout << g->getT() << " " <<tau_E << " " << tau_M << " " << tau_C <<  " " << tau_X << std::endl;
+    std::cout << g->getT() << " " <<tau_E << " " << tau_M << " " << tau_C <<  " " << tau_X << std::endl;
 
 
 }
@@ -617,7 +617,7 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
             ED1_vector_squared.push_back(pow(ED(Configuration,g),2));
             MD1_vector_squared.push_back(pow(MD(Configuration,g),2));
 
-            CS_vector.push_back(Cluster.size());
+            CS_vector.push_back(Cluster.size()/(double) Configuration.Dim());
         }
 
     }
@@ -650,7 +650,7 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
 
     double C1 = pow(g->getBeta(),2)* Configuration.Dim() * svar(ED1_vector);
     double X1 = g->getBeta() * Configuration.Dim() * svar(MD1_vector);
-    double CS = Mean(CS_vector)/(double) Configuration.Dim();
+    double CS = Mean(CS_vector);
     double CS_error = auto_std_err_prim(CS_vector.size(),tau_CS, CS_vector);
 
     //std::cout << tau_C << " " << tau_X << std::endl;
@@ -663,10 +663,10 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
 
     //std::cout << Bootstrap(MD_vector,tau_M, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
     //std::cout << Bootstrap(MD_vector,tau_X, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
-    std::cout << g->getT() << " " << EDavg1 << " " << MDavg1 << " " << C1 <<  " " << X1 << std::endl;
+    //std::cout << g->getT() << " " << EDavg1 << " " << MDavg1 << " " << C1 <<  " " << X1 << std::endl;
     //std::cout << g->getT() << " " <<sigma_E1 << " " << sigma_M1 << " " << sigma_C1 <<  " " << sigma_X1 << std::endl;
     //std::cout << g->getT() << " " <<tau_E1 << " " << tau_M1 << " " << tau_C1 <<  " " << tau_X1 << std::endl;
-    //std::cout << g->getT() <<" "<< CS << " " << CS_error << " " << tau_CS << std:: endl;
+    std::cout << g->getT() <<" "<< CS << " " << CS_error << " " << tau_CS << std:: endl;
 
         
 }

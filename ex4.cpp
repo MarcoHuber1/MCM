@@ -40,31 +40,22 @@ int main()
         if(temp>2.1 && temp<2.4)
         {
             
-            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-            //unsigned seed = 1111121338;
-            std::mt19937 gen;
-            gen.seed(seed);
-            
             Grid_2D.setT(temp);
             Grid_2D.setBeta(1/(Grid_2D.getT()));
             Vector<int> Configuration(&Grid_2D);
             
             //Metropolis(Configuration, &Grid_2D, 10000, gen);
             Wolff(Configuration, &Grid_2D, 10000, gen);
-            temp += 0.005;
+            temp += 0.02;
         }
         else
         {
-            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-            //unsigned seed = 1111121338;
-            std::mt19937 gen;
-            gen.seed(seed);
     
             Grid_2D.setT(temp);
             Grid_2D.setBeta(1/(Grid_2D.getT()));
 
-            Metropolis(Configuration, &Grid_2D, 10000, gen);
-            //Wolff(Configuration, &Grid_2D, 100000, gen);
+            //Metropolis(Configuration, &Grid_2D, 10000, gen);
+            Wolff(Configuration, &Grid_2D, 10000, gen);
             temp += 0.1;
         }
 
