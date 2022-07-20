@@ -22,7 +22,7 @@ void RNG_univ(vector<d> &v, std::mt19937 &gen)
 template<typename d>
 void RNG_uni(d &number, std::mt19937 &gen)
 {
-	std::uniform_int_distribution<int> unidist(0,100);
+	std::uniform_real_distribution<> unidist(0,1);
 	number = unidist(gen);
 }
 

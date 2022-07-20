@@ -466,7 +466,7 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
 
                 double RandomNumber = 0;
                 RNG_uni(RandomNumber,gen);
-                RandomNumber = RandomNumber/100;
+                //RandomNumber = RandomNumber/100;
 
                 double Rho = exponential;
 
@@ -486,11 +486,13 @@ void Metropolis(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt1993
         {
             ED_vector.push_back(ED(Configuration,g));
             MD_vector.push_back(MD(Configuration,g));
+            //std::cout << "lol" << std::endl;
 
             ED_vector_squared.push_back(pow(ED(Configuration,g),2));
             MD_vector_squared.push_back(pow(MD(Configuration,g),2));
         }
     }
+    //std::cout << "lal" << std::endl;
 
     MDavg = Mean(MD_vector);
     EDavg = Mean(ED_vector);
@@ -588,7 +590,7 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
                     //Random number generator
                     double RN = 0;
                     RNG_uni(RN,gen);
-                    RN = RN/100;
+                    //RN = RN/100;
            
                     //add to cluster if RN<=P_add
                     if(RN <= P_add)
@@ -607,7 +609,7 @@ void Wolff(Vector<Val> &Configuration, Grid *g, int Iterations, std::mt19937 &ge
         }
     sweep += 1;
 
-    if(sweep > 2000) //Expectationvalue of E and M after equilibration and after each Markov Chain
+    if(sweep > 5000) //Expectationvalue of E and M after equilibration and after each Markov Chain
         {
             ED1_vector.push_back(ED(Configuration,g));
             MD1_vector.push_back(MD(Configuration,g));
