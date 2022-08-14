@@ -11,7 +11,7 @@ int main()
     gen.seed(seed);
 
     //Set up Grid
-    Grid_XY Grid_2D(10); //argument is lattice dimension
+    Grid_XY Grid_2D(5); //argument is lattice dimension
     Lattice_XY<double> Lat(&Grid_2D);
 
     //Configuration vector
@@ -20,7 +20,7 @@ int main()
     Spin_vector<double> Spin_y(&Grid_2D, gen);
     
     Lat = transform(Theta,&Grid_2D); //2D representation
-
+    Lat.print();
     /////////////////parameters//////////////
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
@@ -32,7 +32,16 @@ int main()
     NN<double>(&Grid_2D, Theta); //Generating table for next neigbors
     std::cout << ED_XY(Theta,&Grid_2D) << std::endl;
     std::cout << MD_XY(Theta,&Grid_2D) << std::endl;
-    HMC(&Grid_2D,Theta,gen);
+
+    std::cout << Theta[0] << std::endl;
+
+    int t_HMC = 1; int t_LF = 2;
+    HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
+    std::cout << Theta[0] << std::endl;
+    std::cout << ED_XY(Theta,&Grid_2D) << std::endl;
+    std::cout << MD_XY(Theta,&Grid_2D) << std::endl;
+    Lat = transform(Theta,&Grid_2D); //2D representation
+    Lat.print();
     //energydensity and magnetization
 
     //double energy = ED<int>(Configuration, &Grid_2D);

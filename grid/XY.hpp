@@ -337,7 +337,7 @@ void NN(Grid_XY *g, Spin_vector<Val> &Configuration)
 
 //HMC-Method//////////////////////////////////////////////////
 template<typename Val>
-void Guidance_Calc(std::mt19937 gen, Spin_vector<Val> p, Spin_vector<Val> Theta, double &p_con_squared, double &H_g, Grid_XY g)
+void Guidance_Calc_i(std::mt19937 gen, Spin_vector<Val> p, Spin_vector<Val> Theta, double &p_con_squared, double &H_g, Grid_XY *g)
 {
     //Conjugate Momenta and Guidance Hamiltonian
     std::normal_distribution<> nd{0,1};
@@ -349,48 +349,114 @@ void Guidance_Calc(std::mt19937 gen, Spin_vector<Val> p, Spin_vector<Val> Theta,
     {p_con_squared += pow(p[i],2);}
     
     //Guidance Hamiltonian
-    H_g = p_con_squared/2 + ED_XY(Theta,g);
-    std::cout << p_con_squared << std::endl;
-}
-template<typename Val>
-void Leapfrog(Spin_vector<Val> Theta, Spin_vector<Val> p, int t_F_Max)
-{
+    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
+
 }
 
 template<typename Val>
-void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int t_F_Max)
+void Guidance_Calc_f(Spin_vector<Val> Theta, double &p_con_squared, double &H_g, Grid_XY *g)
+{
+    //Guidance Hamiltonian
+    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
+}
+
+template<typename Val>
+double dVdq(Spin_vector<Val> Theta, Grid_XY *g)
+{
+    double dV = 0;
+
+    for(int i = 0; i<Theta.Dim(); ++i)
+    {
+        for(int j = 0; j<4; ++j)
+        {
+            dV += sin(Theta[i]-Theta[g->getNN(i,j)]);
+        }
+    }
+    return g->getJ()* g->getBeta() * 0.5* dV;
+}
+
+template<typename Val>
+void Leapfrog(Spin_vector<Val> Theta, Spin_vector<Val> p, int t_LF, Grid_XY *g)
+{
+    double stepsize = 0.01;
+    //q_i(0) = Configuration
+    Spin_vector<Val> q(g);
+    for(int m =0; m<Theta.Dim(); ++m)
+    {
+        q[m] = Theta[m];
+    }
+
+    //initial Halfstep
+    for(int i = 0; i<p.Dim(); ++i)
+    {
+        p[i] -=dVdq(q,g) * stepsize/2;
+    }
+
+    //middle part
+    for(int time = 0; time<(t_LF -1); ++time)
+    {
+        for(int i = 0; i<p.Dim(); ++i)
+        {
+            q[i] += p[i]*stepsize;
+            p[i] -= dVdq(q,g)*stepsize;
+
+        }
+    }
+
+    //final half step
+    for(int i = 0; i<p.Dim(); ++i)
+        {
+            q[i] += p[i]*stepsize;
+            Theta[i] = q[i];
+            p[i] -= dVdq(q,g)*stepsize/2;
+        }
+
+}
+
+template<typename Val>
+void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_F_Max, int &t_LF)
 {
     for(int t_F = 0; t_F < t_F_Max; ++t_F)
     {
-    //generalized Coord. q are the Values of Spin_vector Theta
-    //Conjugate Momenta and Guidance Hamiltonian
-    Spin_vector p_i_initial(g);
-    Spin_vector p_i_final(g);
-    double p_con_squared_initial = 0;
-    double p_con_squared_final = 0;
-    double H_g_initial = 0;
-    double H_g_final = 0;
-    
-    //Initial values:
-    Guidance_Calc(gen,p_i_initial,Theta,p_con_squared_initial,H_g_initial, g);
+        //generalized Coord. q are the Values of Spin_vector Theta
+        //Conjugate Momenta and Guidance Hamiltonian
+        Spin_vector<Val> p_i_initial(g);
+        Spin_vector<Val> p_i_final(g);
 
-    
-    //Leapfrog
+        double p_con_squared_initial = 0;
+        double p_con_squared_final = 0;
+        double H_g_initial = 0;
+        double H_g_final = 0;
 
-    //Make new vector for final proposal and give it the starting values
-    Spin_vector<Val> Final(g);
-    for(int index = 0; index < Theta.Dim(); ++index)
-    {Final[index] = Theta[index];}
-    
-    //Leapfrog Algo
-    Leapfrog(Final, p_i_initial, t_F_Max);
-    Guidance_Calc(gen,p_i_final,Final, p_con_squared_initial, H_g_final);
+        //Initial values:
+        Guidance_Calc_i(gen,p_i_initial,Theta,p_con_squared_initial,H_g_initial,g);
 
-    //Accept reject method
-    //double dH
-    
-    
-    
+
+        //Leapfrog
+
+
+        //Make new vector for final proposal
+        Spin_vector<Val> Final(g);
+        for(int index = 0; index < Theta.Dim(); ++index)
+        {Final[index] = Theta[index];}
+
+        //Leapfrog Algo
+        Leapfrog(Final, p_i_initial, t_LF,g);
+        Guidance_Calc_f(Final,p_con_squared_initial,H_g_final,g);
+
+        //Accept reject method
+        //double dH
+        double acceptance = exp(H_g_initial - H_g_final);
+        double RN = 0;
+        RNG_uni(RN,gen);
+
+        //accept new config
+        if(RN <= acceptance)
+        {
+            for(int index = 0; index < Theta.Dim(); ++index)
+            {Theta[index] = Final[index];}
+        }
+
     }
     
 }
