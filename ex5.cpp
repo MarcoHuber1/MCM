@@ -30,16 +30,18 @@ int main()
 
     //NextNeigbor table
     NN<double>(&Grid_2D, Theta); //Generating table for next neigbors
+
     std::cout << ED_XY(Theta,&Grid_2D) << std::endl;
     std::cout << MD_XY(Theta,&Grid_2D) << std::endl;
 
-    std::cout << Theta[0] << std::endl;
 
-    int t_HMC = 1; int t_LF = 2;
+
+    int t_HMC = 1000; int t_LF = 100;
     HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
-    std::cout << Theta[0] << std::endl;
+
     std::cout << ED_XY(Theta,&Grid_2D) << std::endl;
     std::cout << MD_XY(Theta,&Grid_2D) << std::endl;
+
     Lat = transform(Theta,&Grid_2D); //2D representation
     Lat.print();
     //energydensity and magnetization

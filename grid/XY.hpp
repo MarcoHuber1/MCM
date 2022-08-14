@@ -361,24 +361,23 @@ void Guidance_Calc_f(Spin_vector<Val> Theta, double &p_con_squared, double &H_g,
 }
 
 template<typename Val>
-double dVdq(Spin_vector<Val> Theta, Grid_XY *g)
+double dVdq(int i,Spin_vector<Val> Theta, Grid_XY *g)
 {
     double dV = 0;
 
-    for(int i = 0; i<Theta.Dim(); ++i)
-    {
         for(int j = 0; j<4; ++j)
         {
             dV += sin(Theta[i]-Theta[g->getNN(i,j)]);
+
         }
-    }
     return g->getJ()* g->getBeta() * 0.5* dV;
+
 }
 
 template<typename Val>
-void Leapfrog(Spin_vector<Val> Theta, Spin_vector<Val> p, int t_LF, Grid_XY *g)
+void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *g)
 {
-    double stepsize = 0.01;
+    double stepsize = 0.1;
     //q_i(0) = Configuration
     Spin_vector<Val> q(g);
     for(int m =0; m<Theta.Dim(); ++m)
@@ -389,16 +388,17 @@ void Leapfrog(Spin_vector<Val> Theta, Spin_vector<Val> p, int t_LF, Grid_XY *g)
     //initial Halfstep
     for(int i = 0; i<p.Dim(); ++i)
     {
-        p[i] -=dVdq(q,g) * stepsize/2;
+        p[i] -=dVdq(i,Theta,g) * stepsize/2;
+
     }
 
     //middle part
-    for(int time = 0; time<(t_LF -1); ++time)
+    for(int time = 0; time<(t_LF -1)*stepsize; ++time)
     {
         for(int i = 0; i<p.Dim(); ++i)
         {
             q[i] += p[i]*stepsize;
-            p[i] -= dVdq(q,g)*stepsize;
+            p[i] -= dVdq(i,Theta,g)*stepsize;
 
         }
     }
@@ -407,8 +407,9 @@ void Leapfrog(Spin_vector<Val> Theta, Spin_vector<Val> p, int t_LF, Grid_XY *g)
     for(int i = 0; i<p.Dim(); ++i)
         {
             q[i] += p[i]*stepsize;
+
             Theta[i] = q[i];
-            p[i] -= dVdq(q,g)*stepsize/2;
+            p[i] -= dVdq(i,Theta,g)*stepsize/2;
         }
 
 }
@@ -432,16 +433,15 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_F_Max, i
         Guidance_Calc_i(gen,p_i_initial,Theta,p_con_squared_initial,H_g_initial,g);
 
 
-        //Leapfrog
-
-
         //Make new vector for final proposal
         Spin_vector<Val> Final(g);
         for(int index = 0; index < Theta.Dim(); ++index)
         {Final[index] = Theta[index];}
 
         //Leapfrog Algo
+
         Leapfrog(Final, p_i_initial, t_LF,g);
+
         Guidance_Calc_f(Final,p_con_squared_initial,H_g_final,g);
 
         //Accept reject method
