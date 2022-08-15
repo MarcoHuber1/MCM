@@ -11,7 +11,7 @@ int main()
     gen.seed(seed);
 
     //Set up Grid
-    Grid_XY Grid_2D(5); //argument is lattice dimension
+    Grid_XY Grid_2D(10); //argument is lattice dimension
     Lattice_XY<double> Lat(&Grid_2D);
 
     //Configuration vector
