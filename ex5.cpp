@@ -31,7 +31,7 @@ int main()
     //NextNeigbor table
     NN<double>(&Grid_2D, Theta); //Generating table for next neigbors
 
-    int t_HMC = 10000; int t_LF = 50;
+    int t_HMC = 1000; int t_LF = 20;
 
     for(double temp = 1; temp <= 4.0; temp+=0)
     {

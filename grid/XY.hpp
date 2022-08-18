@@ -176,12 +176,15 @@ template<typename Val>
 double MD_XY(Spin_vector<Val> &Theta, Grid_XY *g) //Energy density
 {
     double Magnetization = 0;
+    double spinx = 0;
+    double spiny = 0;
 
     for(int point = 0; point< Theta.Dim(); ++point)
     {
-        Magnetization += Theta[point];
-        
+        spinx += cos(Theta[point]);
+        spiny += sin(Theta[point]);
     }
+    Magnetization = sqrt(pow(spinx,2) + pow(spiny,2));
     return abs(Magnetization)/g->Dim();
 }
 
@@ -343,7 +346,7 @@ void Guidance_Calc_i(std::mt19937 gen, Spin_vector<Val> &p, Spin_vector<Val> &Th
     std::normal_distribution<> nd{0,1};
 
     for(int i = 0; i < Theta.Dim(); ++i)
-    {p[i] = nd(gen)*sqrt(2*M_PI);}
+    {p[i] = nd(gen);}
 
     for(int i = 0; i < Theta.Dim(); ++i)
     {p_con_squared += pow(p[i],2);}
@@ -373,6 +376,7 @@ double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
             dV += sin(Theta[i]-Theta[g->getNN(i,j)]);
 
         }
+
     return g->getJ()* g->getBeta() * 0.5* dV;
 
 }
@@ -398,7 +402,7 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *
     }
 
     //middle part (t+deltat/2)
-    for(int time = 0; time<(steps-1)*stepsize; ++time)
+    for(double time = 0; time<(steps-1)*stepsize; time+=stepsize)
     {
         for(int i = 0; i<p.Dim(); ++i)
         {
