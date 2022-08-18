@@ -112,7 +112,7 @@ Spin_vector<Val>::Spin_vector(Grid_XY *grid,std::mt19937 &gen) :grid(grid)
     vec.resize(DIM);
     auto pi = M_PI;
     std::uniform_real_distribution<> unidist(0,2*pi);
-    
+
      for(int point = 0; point< DIM; ++point)
     {
         vec[point] = unidist(gen);
@@ -337,31 +337,34 @@ void NN(Grid_XY *g, Spin_vector<Val> &Configuration)
 
 //HMC-Method//////////////////////////////////////////////////
 template<typename Val>
-void Guidance_Calc_i(std::mt19937 gen, Spin_vector<Val> p, Spin_vector<Val> Theta, double &p_con_squared, double &H_g, Grid_XY *g)
+void Guidance_Calc_i(std::mt19937 gen, Spin_vector<Val> &p, Spin_vector<Val> &Theta, double &p_con_squared, double &H_g, Grid_XY *g)
 {
     //Conjugate Momenta and Guidance Hamiltonian
     std::normal_distribution<> nd{0,1};
-    
+
     for(int i = 0; i < Theta.Dim(); ++i)
-    {p[i] = nd(gen);}
+    {p[i] = nd(gen)*sqrt(2*M_PI);}
 
     for(int i = 0; i < Theta.Dim(); ++i)
     {p_con_squared += pow(p[i],2);}
-    
+
     //Guidance Hamiltonian
     H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
 
 }
 
 template<typename Val>
-void Guidance_Calc_f(Spin_vector<Val> Theta, double &p_con_squared, double &H_g, Grid_XY *g)
+void Guidance_Calc_f(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &p_con_squared, double &H_g, Grid_XY *g)
 {
+    for(int i = 0; i < Theta.Dim(); ++i)
+    {p_con_squared += pow(p[i],2);}
+
     //Guidance Hamiltonian
     H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
 }
 
 template<typename Val>
-double dVdq(int i,Spin_vector<Val> Theta, Grid_XY *g)
+double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
 {
     double dV = 0;
 
@@ -377,23 +380,25 @@ double dVdq(int i,Spin_vector<Val> Theta, Grid_XY *g)
 template<typename Val>
 void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *g)
 {
-    double stepsize = 0.1;
+    double stepsize = 0.01;
     //q_i(0) = Configuration
     Spin_vector<Val> q(g);
+    double steps = t_LF/stepsize;
+
     for(int m =0; m<Theta.Dim(); ++m)
     {
         q[m] = Theta[m];
     }
 
-    //initial Halfstep
+    //initial Halfstep (deltat/2)
     for(int i = 0; i<p.Dim(); ++i)
     {
         p[i] -=dVdq(i,Theta,g) * stepsize/2;
 
     }
 
-    //middle part
-    for(int time = 0; time<(t_LF -1)*stepsize; ++time)
+    //middle part (t+deltat/2)
+    for(int time = 0; time<(steps-1)*stepsize; ++time)
     {
         for(int i = 0; i<p.Dim(); ++i)
         {
@@ -415,10 +420,16 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *
 }
 
 template<typename Val>
-void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_F_Max, int &t_LF)
+void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int &t_LF)
 {
-    for(int t_F = 0; t_F < t_F_Max; ++t_F)
+    std::vector<double> Energies;
+    std::vector<double> Magnetizations;
+    double EDavg = 0;
+    double MDavg = 0;
+
+    for(int t = 0; t < t_HMC; ++t)
     {
+
         //generalized Coord. q are the Values of Spin_vector Theta
         //Conjugate Momenta and Guidance Hamiltonian
         Spin_vector<Val> p_i_initial(g);
@@ -442,11 +453,11 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_F_Max, i
 
         Leapfrog(Final, p_i_initial, t_LF,g);
 
-        Guidance_Calc_f(Final,p_con_squared_initial,H_g_final,g);
+        Guidance_Calc_f(Final,p_i_initial,p_con_squared_final,H_g_final,g);
 
         //Accept reject method
         //double dH
-        double acceptance = exp(H_g_initial - H_g_final);
+        double acceptance = std::min(1.0,exp(H_g_initial - H_g_final));
         double RN = 0;
         RNG_uni(RN,gen);
 
@@ -456,8 +467,18 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_F_Max, i
             for(int index = 0; index < Theta.Dim(); ++index)
             {Theta[index] = Final[index];}
         }
+        if(t > t_HMC/10)
+        {
+            //std::cout << ED_XY(Theta,g) << std::endl;
+            Energies.push_back(ED_XY(Theta,g));
+            Magnetizations.push_back(MD_XY(Theta,g));
+        }
 
     }
+    EDavg = Mean(Energies);
+    MDavg = Mean(Magnetizations);
+    std::cout <<  g->getT() <<" "<<EDavg << " " <<MDavg << std::endl;
+
     
 }
 
