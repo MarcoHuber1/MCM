@@ -352,7 +352,7 @@ void Guidance_Calc_i(std::mt19937 gen, Spin_vector<Val> &p, Spin_vector<Val> &Th
     {p_con_squared += pow(p[i],2);}
 
     //Guidance Hamiltonian
-    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
+    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g)*g->Dim();
 
 }
 
@@ -363,7 +363,7 @@ void Guidance_Calc_f(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &p_con
     {p_con_squared += pow(p[i],2);}
 
     //Guidance Hamiltonian
-    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
+    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g)*g->Dim();
 }
 
 template<typename Val>
@@ -377,7 +377,7 @@ double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
 
         }
 
-    return g->getJ()* g->getBeta() * 0.5* dV;
+    return g->getJ()* g->getBeta() * 0.5*dV;
 
 }
 
@@ -385,9 +385,10 @@ template<typename Val>
 void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *g)
 {
     double stepsize = 0.01;
-    //q_i(0) = Configuration
+
     Spin_vector<Val> q(g);
     double steps = t_LF/stepsize;
+
 
     for(int m =0; m<Theta.Dim(); ++m)
     {
@@ -397,8 +398,7 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *
     //initial Halfstep (deltat/2)
     for(int i = 0; i<p.Dim(); ++i)
     {
-        p[i] -=dVdq(i,Theta,g) * stepsize/2;
-
+        p[i] -=dVdq(i,q,g) * stepsize/2;
     }
 
     //middle part (t+deltat/2)
@@ -407,8 +407,8 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *
         for(int i = 0; i<p.Dim(); ++i)
         {
             q[i] += p[i]*stepsize;
-            p[i] -= dVdq(i,Theta,g)*stepsize;
 
+            p[i] -= dVdq(i,q,g)*stepsize;
         }
     }
 
@@ -418,8 +418,11 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *
             q[i] += p[i]*stepsize;
 
             Theta[i] = q[i];
-            p[i] -= dVdq(i,Theta,g)*stepsize/2;
+
+            //p[i] -= dVdq(i,q,g)*stepsize/2;
+
         }
+
 
 }
 
@@ -454,24 +457,46 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
         {Final[index] = Theta[index];}
 
         //Leapfrog Algo
-
+        //std::cout << Final[0] << " " << Final[1] << std::endl;
         Leapfrog(Final, p_i_initial, t_LF,g);
+        //std::cout << Final[0] << " " << Final[1] << std::endl;
+        //std::cout << "LOL" << std::endl;
 
         Guidance_Calc_f(Final,p_i_initial,p_con_squared_final,H_g_final,g);
 
-        //Accept reject method
-        //double dH
-        double acceptance = std::min(1.0,exp(H_g_initial - H_g_final));
-        double RN = 0;
-        RNG_uni(RN,gen);
 
-        //accept new config
-        if(RN <= acceptance)
+        //std::cout << "Guidance: " << H_g_initial << " " << H_g_final << std::endl;
+
+
+        //Accept reject method
+        double acceptance = std::min(1.0,exp(H_g_initial - H_g_final));
+
+        if(H_g_final > H_g_initial)
         {
             for(int index = 0; index < Theta.Dim(); ++index)
-            {Theta[index] = Final[index];}
+            {
+                Theta[index] = Final[index];
+                //std::cout << "accepted: " << acceptance <<std::endl;
+            }
         }
-        if(t > t_HMC/10)
+        else
+        {
+            double RN = 0;
+            RNG_uni(RN,gen);
+            //std::cout << acceptance << std::endl;
+            //accept new config
+            if(RN <= acceptance)
+            {
+                for(int index = 0; index < Theta.Dim(); ++index)
+                {
+                    Theta[index] = Final[index];
+                    //std::cout << "accepted: " << RN << " " << acceptance <<std::endl;
+                }
+            }
+        }
+
+        //Measurements:
+        if(t > t_HMC/2)
         {
             //std::cout << ED_XY(Theta,g) << std::endl;
             Energies.push_back(ED_XY(Theta,g));
@@ -481,7 +506,7 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
     }
     EDavg = Mean(Energies);
     MDavg = Mean(Magnetizations);
-    std::cout <<  g->getT() <<" "<<EDavg << " " <<MDavg << std::endl;
+    std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
 
     
 }

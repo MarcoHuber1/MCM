@@ -15,10 +15,8 @@ int main()
     Lattice_XY<double> Lat(&Grid_2D);
 
     //Configuration vector
-    Spin_vector<double> Theta(&Grid_2D, gen);
-    Spin_vector<double> Spin_x(&Grid_2D, gen);
-    Spin_vector<double> Spin_y(&Grid_2D, gen);
-    
+    Spin_vector<double> Theta(&Grid_2D);
+
     Lat = transform(Theta,&Grid_2D); //2D representation
     //Lat.print();
     /////////////////parameters//////////////
@@ -31,14 +29,15 @@ int main()
     //NextNeigbor table
     NN<double>(&Grid_2D, Theta); //Generating table for next neigbors
 
-    int t_HMC = 1000; int t_LF = 20;
+    int t_HMC = 1000; int t_LF = 10;
+    //HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
 
     for(double temp = 1; temp <= 4.0; temp+=0)
     {
         Grid_2D.setT(temp);
         Grid_2D.setBeta(1/temp);
 
-        Spin_vector<double> Theta(&Grid_2D,gen);
+        //Spin_vector<double> Theta(&Grid_2D,gen);
         HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
         temp += 0.1;
     }
