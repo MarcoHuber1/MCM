@@ -126,7 +126,7 @@ Spin_vector<Val>::Spin_vector(Grid_XY *grid) :grid(grid)
     vec.resize(DIM);
     for(int point = 0; point< DIM; ++point)
     {
-        vec[point] = 0;
+        vec[point] = -M_PI;
     }
 
 }
@@ -352,7 +352,7 @@ void Guidance_Calc_i(std::mt19937 gen, Spin_vector<Val> &p, Spin_vector<Val> &Th
     {p_con_squared += pow(p[i],2);}
 
     //Guidance Hamiltonian
-    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g)*g->Dim();
+    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
 
 }
 
@@ -360,10 +360,12 @@ template<typename Val>
 void Guidance_Calc_f(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &p_con_squared, double &H_g, Grid_XY *g)
 {
     for(int i = 0; i < Theta.Dim(); ++i)
-    {p_con_squared += pow(p[i],2);}
+    {
+        p_con_squared += pow(p[i],2);
+    }
 
     //Guidance Hamiltonian
-    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g)*g->Dim();
+    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
 }
 
 template<typename Val>
@@ -376,7 +378,6 @@ double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
             dV += sin(Theta[i]-Theta[g->getNN(i,j)]);
 
         }
-
     return g->getJ()* g->getBeta() * 0.5*dV;
 
 }
@@ -414,14 +415,14 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *
 
     //final half step
     for(int i = 0; i<p.Dim(); ++i)
-        {
-            q[i] += p[i]*stepsize;
+    {
+        q[i] += p[i]*stepsize;
 
-            Theta[i] = q[i];
+        Theta[i] = q[i];
 
-            //p[i] -= dVdq(i,q,g)*stepsize/2;
+        p[i] -= dVdq(i,q,g)*stepsize/2;
 
-        }
+    }
 
 
 }
@@ -509,6 +510,167 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
     std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
 
     
+}
+
+
+
+
+
+
+
+
+//Delta Energy
+template<typename Val>
+void q_XY(double &q, Spin_vector<Val> &Theta, Grid_XY *g, int &point)
+{
+    for(int i = 0; i<4; ++i)
+    {q -= cos(Theta[point] - Theta[g->getNN(point,i)]);}
+
+    q*=0.5;
+}
+
+//Spinflip
+template<typename Val>
+void Spinflip_proposal(Spin_vector<Val> &Theta,int &point, double &dTheta)
+{
+    Theta[point] += dTheta;
+}
+
+template<typename Val>
+void Spinflip_back(Spin_vector<Val> &Theta,int &point, double &dTheta)
+{
+    Theta[point] -=dTheta;
+}
+
+template<typename Val>
+void Metropolis_XY(Spin_vector<Val> &Theta, Grid_XY *g, int Iterations, std::mt19937 &gen)
+{
+    int MarkovTime_XY = 0;
+/*
+    const char* Datei = "IsingE100.txt";
+    const char* Datei2 = "IsingM100.txt";
+    FILE * handle = fopen(Datei, "w");
+    FILE * handle2 = fopen(Datei2, "w");
+*/
+
+    double exponential_XY = 0;
+
+    double VarianceE_XY = 0;
+    double VarianceM_XY = 0;
+
+    vector<double> ED_vector_XY;
+    vector<double> MD_vector_XY;
+
+    vector<double> ED_vector_squared_XY;
+    vector<double> MD_vector_squared_XY;
+
+
+    double MDavg_XY = 0;
+    double EDavg_XY = 0;
+
+    //Markov Process
+    for(int i=0; i< Iterations; ++i)
+    {
+         //std::cout << "lol" << std::endl;
+        //Getting each point of Configuration
+        for(int point = 0; point < Theta.Dim(); ++point)
+        {
+            double Q_i  = 0; //Energy before
+            double Q_f  = 0; //Energy after
+            double dE = 0; //Energy difference
+
+
+            //calculate Energy before spinflip
+            q_XY(Q_i,Theta, g, point);
+
+            //make spinflip with normal distr.
+            double delta = 0.8;
+            double dTheta = 0;
+            RNG_norm(dTheta,gen,0,delta);
+            Spinflip_proposal(Theta,point,dTheta); //new proposal Theta = Theta + dTheta
+
+            //calculate Energy after spinflip
+            q_XY(Q_f,Theta, g, point);
+
+            dE = Q_f - Q_i;
+            //std::cout << dE << std::endl;
+
+            if(dE>0)
+            {
+                double RandomNumber = 0;
+                RNG_uni(RandomNumber,gen);
+
+                double Rho = exp(g->getBeta()*-dE);
+
+                if(RandomNumber > Rho)
+                {Spinflip_back(Theta,point,dTheta);}
+
+            }
+        }
+
+        //fprintf(handle, "%lf\n",ED(Configuration,g));
+        //fprintf(handle2, "%lf\n",MD(Configuration,g));
+        MarkovTime_XY += 1;
+
+        if(MarkovTime_XY > 5000) //Expectationvalue of E and M after equilibration and after each Markov Chain
+        {
+            ED_vector_XY.push_back(ED_XY(Theta,g));
+            MD_vector_XY.push_back(MD_XY(Theta,g));
+            //std::cout << "lol" << std::endl;
+
+            ED_vector_squared_XY.push_back(pow(ED_XY(Theta,g),2));
+            MD_vector_squared_XY.push_back(pow(MD_XY(Theta,g),2));
+        }
+    }
+    //std::cout << "lal" << std::endl;
+
+    MDavg_XY = Mean(MD_vector_XY);
+    EDavg_XY = Mean(ED_vector_XY);
+/*
+    vector<double> C_eff_XY;
+    vector<double> X_eff_XY;
+
+    for(int m = 0; m < ED_vector_XY.size(); ++m)
+    {
+        C_eff_XY.push_back(pow(g->getBeta(),2)* Theta.Dim() * (ED_vector_squared_XY[m] - 2 * EDavg_XY * ED_vector_XY[m]));
+        X_eff_XY.push_back(g->getBeta() * Theta.Dim() * (MD_vector_squared_XY[m] - 2 * MDavg_XY * MD_vector_XY[m]));
+    }
+
+
+    double tau_E_XY = tau_int(ED_vector_XY);
+    double tau_E_squared_XY = tau_int(ED_vector_squared_XY);
+
+    double tau_M_XY = tau_int(MD_vector_XY);
+    double tau_M_squared_XY = tau_int(MD_vector_squared_XY);
+
+    double tau_C_XY = tau_int(C_eff_XY);
+    double tau_X_XY = tau_int(X_eff_XY);
+
+    double sigma_E_XY = auto_std_err_prim(ED_vector_XY.size(),tau_E_XY, ED_vector_XY);
+    double sigma_M_XY = auto_std_err_prim(MD_vector_XY.size(),tau_M_XY, MD_vector_XY);
+    double sigma_C_XY = auto_std_err_prim(C_eff_XY.size(),tau_C_XY, C_eff_XY);
+    double sigma_X_XY = auto_std_err_prim(X_eff_XY.size(),tau_X_XY, X_eff_XY);
+
+    double C_XY = pow(g->getBeta(),2)* Theta.Dim() * svar(ED_vector_XY);
+    double X_XY = g->getBeta() * Theta.Dim() * svar(MD_vector_XY);
+
+    //std::cout << tau_C << " " << tau_X << std::endl;
+    //std::cout << "tau C: "<<auto_std_err_prim(C_eff.size(),tau_C, C_eff) << std::endl;
+    //std::cout << "tau X: "<<auto_std_err_prim(X_eff.size(),tau_X, X_eff) << std::endl;
+    //std::cout << "tau MD: "<< auto_std_err_prim(MD_vector.size(),tau_M, MD_vector) << std::endl;
+    //std::cout << "tau MD: "<< auto_std_err_prim(ED_vector.size(),tau_M, ED_vector) << std::endl;
+    //std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
+    //std::cout << Blocking(MD_vector,20, g->getBeta() * Configuration.Dim()) << std::endl;
+
+    //std::cout << Bootstrap(MD_vector,tau_M, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
+    //std::cout << Bootstrap(MD_vector,tau_X, 1000, gen, g->getBeta()  * Configuration.Dim()) << std::endl;
+    //std::cout << g->getT() << " " << EDavg << " " << MDavg << " " << C <<  " " << X << std::endl;
+    //std::cout << g->getT() << " " <<sigma_E << " " << sigma_M << " " << sigma_C <<  " " << sigma_X << std::endl;
+    //std::cout << g->getT() << " " <<tau_E << " " << tau_M << " " << tau_C <<  " " << tau_X << std::endl;
+*/
+    std::cout << g->getT() << " " <<EDavg_XY << " " << MDavg_XY <<std::endl;
+
+
 }
 
 #endif //Grid_XY_H

@@ -31,38 +31,20 @@ int main()
 
     int t_HMC = 1000; int t_LF = 10;
     //HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
+    //Metropolis_XY(Theta, &Grid_2D, t_HMC, gen);
 
-    for(double temp = 1; temp <= 4.0; temp+=0)
+
+    for(double temp = 0.1; temp <= 4.0; temp+=0)
     {
         Grid_2D.setT(temp);
         Grid_2D.setBeta(1/temp);
 
-        //Spin_vector<double> Theta(&Grid_2D,gen);
+        //Spin_vector<double> Theta(&Grid_2D);
         HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
+        //Metropolis_XY(Theta, &Grid_2D, 10000, gen);
         temp += 0.1;
     }
 
-    //std::cout << ED_XY(Theta,&Grid_2D) << std::endl;
-    //std::cout << MD_XY(Theta,&Grid_2D) << std::endl;
 
-    Lat = transform(Theta,&Grid_2D); //2D representation
-    //Lat.print();
-    //energydensity and magnetization
-
-    //double energy = ED<int>(Configuration, &Grid_2D);
-    //std::cout << energy << std::endl;
-
-    //double magnetization = MD<int>(Configuration, &Grid_2D);
-
-    //Wolff(Configuration, &Grid_2D, 10000, gen);
-    //std::cout << magnetization << std::endl;
-/*
-    for(double temp = 0.1; temp < 5.0; temp+=0.1)
-    {
-        Grid_2D.setT(temp);
-        Grid_2D.setBeta(1/(Grid_2D.getT()));
-        Markov(Configuration, &Grid_2D, 100000, gen);
-    }
-    */
 
 }
