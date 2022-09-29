@@ -378,7 +378,7 @@ double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
             dV += sin(Theta[i]-Theta[g->getNN(i,j)]);
 
         }
-    return g->getJ()* g->getBeta() * 0.5*dV;
+    return g->getJ()* g->getBeta() *dV;
 
 }
 
@@ -405,23 +405,29 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *
     //middle part (t+deltat/2)
     for(double time = 0; time<(steps-1)*stepsize; time+=stepsize)
     {
-        for(int i = 0; i<p.Dim(); ++i)
+        for(int i = 0; i<q.Dim(); ++i)
         {
             q[i] += p[i]*stepsize;
+        }
 
+        for(int i = 0; i<p.Dim(); ++i)
+        {
             p[i] -= dVdq(i,q,g)*stepsize;
         }
+
+
     }
 
     //final half step
     for(int i = 0; i<p.Dim(); ++i)
     {
         q[i] += p[i]*stepsize;
-
         Theta[i] = q[i];
+    }
 
-        p[i] -= dVdq(i,q,g)*stepsize/2;
-
+    for(int i = 0; i<p.Dim(); ++i)
+    {
+       p[i] -= dVdq(i,q,g)*stepsize/2;
     }
 
 
@@ -526,7 +532,6 @@ void q_XY(double &q, Spin_vector<Val> &Theta, Grid_XY *g, int &point)
     for(int i = 0; i<4; ++i)
     {q -= cos(Theta[point] - Theta[g->getNN(point,i)]);}
 
-    q*=0.5;
 }
 
 //Spinflip

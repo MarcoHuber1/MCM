@@ -23,7 +23,7 @@ int main()
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
     Grid_2D.setB(0);
-    Grid_2D.setT(2.0);
+    Grid_2D.setT(2.3);
     Grid_2D.setBeta(1/(Grid_2D.getT()));
 
     //NextNeigbor table
@@ -40,11 +40,9 @@ int main()
         Grid_2D.setBeta(1/temp);
 
         //Spin_vector<double> Theta(&Grid_2D);
-        HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
-        //Metropolis_XY(Theta, &Grid_2D, 10000, gen);
+        //HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
+        Metropolis_XY(Theta, &Grid_2D, 10000, gen);
         temp += 0.1;
     }
-
-
 
 }
