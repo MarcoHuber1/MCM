@@ -29,11 +29,11 @@ int main()
     //NextNeigbor table
     NN<double>(&Grid_2D, Theta); //Generating table for next neigbors
 
-    int t_HMC = 1000; int t_LF = 10;
-    //HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
+    int t_HMC = 1000; int t_LF = 100;
+    HMC(&Grid_2D,Theta,gen,t_HMC,t_LF);
     //Metropolis_XY(Theta, &Grid_2D, t_HMC, gen);
 
-
+/*
     for(double temp = 0.1; temp <= 4.0; temp+=0)
     {
         Grid_2D.setT(temp);
@@ -44,5 +44,5 @@ int main()
         Metropolis_XY(Theta, &Grid_2D, 10000, gen);
         temp += 0.1;
     }
-
+*/
 }

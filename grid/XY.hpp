@@ -166,7 +166,7 @@ double ED_XY(Spin_vector<Val> &Theta, Grid_XY *g) //Energy density
     {
         for(int neighbor = 0; neighbor<4; ++neighbor)
         {
-            Energy -= cos(Theta[point])*cos(Theta[g->getNN(point,neighbor)]) + sin(Theta[point])*sin(Theta[g->getNN(point,neighbor)]);
+            Energy -= (cos(Theta[point])*cos(Theta[g->getNN(point,neighbor)]) + sin(Theta[point])*sin(Theta[g->getNN(point,neighbor)]));
         }
     }
     return 0.5*g->getJ()*Energy/g->Dim();
@@ -352,7 +352,7 @@ void Guidance_Calc_i(std::mt19937 gen, Spin_vector<Val> &p, Spin_vector<Val> &Th
     {p_con_squared += pow(p[i],2);}
 
     //Guidance Hamiltonian
-    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
+    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g)*g->Dim();
 
 }
 
@@ -365,7 +365,7 @@ void Guidance_Calc_f(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &p_con
     }
 
     //Guidance Hamiltonian
-    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g);
+    H_g = p_con_squared/2 + g->getBeta()*ED_XY(Theta,g)*g->Dim();
 }
 
 template<typename Val>
@@ -472,7 +472,7 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
         Guidance_Calc_f(Final,p_i_initial,p_con_squared_final,H_g_final,g);
 
 
-        //std::cout << "Guidance: " << H_g_initial << " " << H_g_final << std::endl;
+        std::cout << "Guidance: " << H_g_initial << " " << H_g_final << std::endl;
 
 
         //Accept reject method
@@ -513,7 +513,7 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
     }
     EDavg = Mean(Energies);
     MDavg = Mean(Magnetizations);
-    std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
+    //std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
 
     
 }
