@@ -385,7 +385,7 @@ double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
 template<typename Val>
 void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *g)
 {
-    double stepsize = 0.01;
+    double stepsize = 0.1;
 
     Spin_vector<Val> q(g);
     double steps = t_LF/stepsize;
@@ -472,7 +472,7 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
         Guidance_Calc_f(Final,p_i_initial,p_con_squared_final,H_g_final,g);
 
 
-        std::cout << "Guidance: " << H_g_initial << " " << H_g_final << std::endl;
+        //std::cout << "Guidance: " << H_g_initial << " " << H_g_final << std::endl;
 
 
         //Accept reject method
@@ -513,7 +513,9 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
     }
     EDavg = Mean(Energies);
     MDavg = Mean(Magnetizations);
-    //std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
+    double tau_M_XY = tau_int(Magnetizations);
+    //std::cout << g->getT() << " " << 2*tau_M_XY*50 << std::endl;
+    std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
 
     
 }
