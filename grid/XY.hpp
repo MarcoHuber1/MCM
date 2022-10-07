@@ -126,7 +126,7 @@ Spin_vector<Val>::Spin_vector(Grid_XY *grid) :grid(grid)
     vec.resize(DIM);
     for(int point = 0; point< DIM; ++point)
     {
-        vec[point] = -M_PI;
+        vec[point] = 1.5*M_PI;
     }
 
 }
@@ -164,10 +164,14 @@ double ED_XY(Spin_vector<Val> &Theta, Grid_XY *g) //Energy density
 
     for(int point = 0; point<Theta.Dim(); ++point)
     {
+    /*
         for(int neighbor = 0; neighbor<4; ++neighbor)
         {
-            Energy -= (cos(Theta[point])*cos(Theta[g->getNN(point,neighbor)]) + sin(Theta[point])*sin(Theta[g->getNN(point,neighbor)]));
+            Energy -= cos(Theta[point] - Theta[g->getNN(point,neighbor)]);
         }
+        //(cos(Theta[point])*cos(Theta[g->getNN(point,neighbor)]) + sin(Theta[point])*sin(Theta[g->getNN(point,neighbor)]));
+   */
+        Energy -= cos(Theta[point] - Theta[g->getNN(point,1)]) + cos(Theta[point] - Theta[g->getNN(point,3)]);
     }
     return 0.5*g->getJ()*Energy/g->Dim();
 }
@@ -378,14 +382,15 @@ double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
             dV += sin(Theta[i]-Theta[g->getNN(i,j)]);
 
         }
+
     return g->getJ()* g->getBeta() *dV;
 
 }
 
 template<typename Val>
-void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *g)
+void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &t_LF, Grid_XY *g)
 {
-    double stepsize = 0.1;
+    double stepsize = 0.01;
 
     Spin_vector<Val> q(g);
     double steps = t_LF/stepsize;
@@ -434,7 +439,7 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, int &t_LF, Grid_XY *
 }
 
 template<typename Val>
-void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int &t_LF)
+void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, double &t_LF, double &n)
 {
     std::vector<double> Energies;
     std::vector<double> Magnetizations;
@@ -478,7 +483,7 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
         //Accept reject method
         double acceptance = std::min(1.0,exp(H_g_initial - H_g_final));
 
-        if(H_g_final > H_g_initial)
+        if(H_g_final >= H_g_initial)
         {
             for(int index = 0; index < Theta.Dim(); ++index)
             {
@@ -513,8 +518,9 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, int
     }
     EDavg = Mean(Energies);
     MDavg = Mean(Magnetizations);
-    double tau_M_XY = tau_int(Magnetizations);
-    //std::cout << g->getT() << " " << 2*tau_M_XY*50 << std::endl;
+    //double tau_M_XY = tau_int(Magnetizations);
+    //std::cout << g->getT() << " " << 2*tau_M_XY*15 << std::endl;
+    //std::cout << n/0.1 << " " << 2*tau_M_XY*(n/0.1) << std::endl;
     std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
 
     
