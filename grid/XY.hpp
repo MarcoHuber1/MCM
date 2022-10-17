@@ -173,7 +173,7 @@ double ED_XY(Spin_vector<Val> &Theta, Grid_XY *g) //Energy density
    */
         Energy -= cos(Theta[point] - Theta[g->getNN(point,1)]) + cos(Theta[point] - Theta[g->getNN(point,3)]);
     }
-    return 0.5*g->getJ()*Energy/g->Dim();
+    return g->getJ()*Energy/g->Dim();
 }
 //Magnetisationdensity
 template<typename Val>
@@ -344,7 +344,7 @@ void NN(Grid_XY *g, Spin_vector<Val> &Configuration)
 
 //HMC-Method//////////////////////////////////////////////////
 template<typename Val>
-void Guidance_Calc_i(std::mt19937 gen, Spin_vector<Val> &p, Spin_vector<Val> &Theta, double &p_con_squared, double &H_g, Grid_XY *g)
+void Guidance_Calc_i(std::mt19937 &gen, Spin_vector<Val> &p, Spin_vector<Val> &Theta, double &p_con_squared, double &H_g, Grid_XY *g)
 {
     //Conjugate Momenta and Guidance Hamiltonian
     std::normal_distribution<> nd{0,1};
@@ -373,7 +373,7 @@ void Guidance_Calc_f(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &p_con
 }
 
 template<typename Val>
-double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
+double dVdq(int &i,Spin_vector<Val> &Theta, Grid_XY *g)
 {
     double dV = 0;
 
@@ -384,13 +384,14 @@ double dVdq(int i,Spin_vector<Val> &Theta, Grid_XY *g)
         }
 
     return g->getJ()* g->getBeta() *dV;
+    //g->getBeta()
 
 }
 
 template<typename Val>
-void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &t_LF, Grid_XY *g)
+void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &t_LF, Grid_XY *g, double &stepsize)
 {
-    double stepsize = 0.01;
+    //double stepsize = 0.01;
 
     Spin_vector<Val> q(g);
     double steps = t_LF/stepsize;
@@ -439,12 +440,14 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &t_LF, Grid_X
 }
 
 template<typename Val>
-void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, double &t_LF, double &n)
+void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, double &t_LF, double &stepsize)
 {
     std::vector<double> Energies;
     std::vector<double> Magnetizations;
     double EDavg = 0;
     double MDavg = 0;
+
+    //FILE * handle = fopen(Datei, "w");
 
     for(int t = 0; t < t_HMC; ++t)
     {
@@ -470,7 +473,7 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, dou
 
         //Leapfrog Algo
         //std::cout << Final[0] << " " << Final[1] << std::endl;
-        Leapfrog(Final, p_i_initial, t_LF,g);
+        Leapfrog(Final, p_i_initial, t_LF,g, stepsize);
         //std::cout << Final[0] << " " << Final[1] << std::endl;
         //std::cout << "LOL" << std::endl;
 
@@ -495,9 +498,10 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, dou
         {
             double RN = 0;
             RNG_uni(RN,gen);
+
             //std::cout << acceptance << std::endl;
             //accept new config
-            if(RN <= acceptance)
+            if(RN < acceptance)
             {
                 for(int index = 0; index < Theta.Dim(); ++index)
                 {
@@ -506,7 +510,7 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, dou
                 }
             }
         }
-
+        //fprintf(handle, "%lf\n",ED_XY(Theta,g));
         //Measurements:
         if(t > t_HMC/2)
         {
@@ -516,12 +520,19 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, dou
         }
 
     }
+    double standarddev = sdev(Magnetizations);
     EDavg = Mean(Energies);
     MDavg = Mean(Magnetizations);
-    //double tau_M_XY = tau_int(Magnetizations);
+    double tau_M_XY = tau_int(Magnetizations);
+    double sigma_M_XY = auto_std_err_prim(Magnetizations.size(),tau_M_XY, Magnetizations);
     //std::cout << g->getT() << " " << 2*tau_M_XY*15 << std::endl;
-    //std::cout << n/0.1 << " " << 2*tau_M_XY*(n/0.1) << std::endl;
+    //std::cout << t_LF/0.1 << " " << 2*tau_M_XY*(t_LF/0.1) << std::endl;
+    //std::cout << 2*tau_M_XY*(steps) << " ";
+    //fprintf(handle, "%lf ",2*tau_M_XY*(t_LF/stepsize));
+    //std::cout << stepsize << std::endl;
     std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
+    //std::cout <<  g->getT() << "  "<<standarddev << std::endl;
+    //std::cout << g->getT() << " " << sigma_M_XY << std::endl;
 
     
 }

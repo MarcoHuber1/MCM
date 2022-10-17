@@ -24,25 +24,41 @@ int main()
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
     Grid_2D.setB(0);
-    Grid_2D.setT(0.3);
+    Grid_2D.setT(10);
     Grid_2D.setBeta(1/(Grid_2D.getT()));
 
     //NextNeigbor table
     NN<double>(&Grid_2D, Theta); //Generating table for next neigbors
-    double n = 1;
-    int t_HMC = 100; double t_LF = 100;
-    //HMC(&Grid_2D,Theta,gen,t_HMC,t_LF,n);
-    //Metropolis_XY(Theta, &Grid_2D, t_HMC, gen);
-/*
-    for(double n=0; n<50; n+=0.1)
-    {
-        HMC(&Grid_2D,Theta,gen,t_HMC,t_LF,n);
-        t_LF +=n;
 
+    const char* Datei = "thermali.txt";
+    const char* Datei2 = "sth.txt";
+
+    //int t_HMC = 1000000; double t_LF = 100;
+    double stepsize = 0.01;
+    //double n = 2;
+    //HMC(&Grid_2D,Theta,gen,t_HMC,t_LF,stepsize, Datei, n);
+    //Metropolis_XY(Theta, &Grid_2D, t_HMC, gen);
+
+
+/*
+    t_HMC = 1000;
+    std::cout << "Doing..." <<std::endl;
+    for(stepsize = 0.01; stepsize < 0.425; stepsize += 0.025)
+    {
+
+        for(n = 1; n<30; n+=2.5)
+        {
+
+            HMC(&Grid_2D,Theta,gen,t_HMC,t_LF,stepsize,Datei2,n);
+            //std::cout << t_LF << std::endl;
+
+        }
+        std::cout << std::endl;
     }
+    std::cout << "Done" <<std::endl;
 */
 
-    std::cout << "dt: 0.22" << " n: 15 "   << std::endl;
+    int t_HMC = 100; double t_LF = 100;
     for(double temp = 0.1; temp <= 4.0; temp+=0)
     {
 
@@ -51,7 +67,7 @@ int main()
 
         //Spin_vector<double> Theta(&Grid_2D);
 
-        HMC(&Grid_2D,Theta,gen,t_HMC,t_LF, n);
+        HMC(&Grid_2D,Theta,gen,t_HMC,t_LF, stepsize);
         //Metropolis_XY(Theta, &Grid_2D, 10000, gen);
         temp += 0.1;
     }
