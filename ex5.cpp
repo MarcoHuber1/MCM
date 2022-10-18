@@ -34,7 +34,7 @@ int main()
     const char* Datei2 = "sth.txt";
 
     //Thermalisation:
-    int t_HMC = 30000; double t_LF = 0.3;
+    int t_HMC = 100000; double t_LF = 0.3;
     double stepsize = 0.01;
     //double n = 2;
     HMC(&Grid_2D,Theta,gen,t_HMC,t_LF,stepsize, Datei);
