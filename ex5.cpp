@@ -24,7 +24,7 @@ int main()
     Grid_2D.setJ(1);
     Grid_2D.setk(1);
     Grid_2D.setB(0);
-    Grid_2D.setT(10);
+    Grid_2D.setT(0.1);
     Grid_2D.setBeta(1/(Grid_2D.getT()));
 
     //NextNeigbor table
@@ -33,10 +33,11 @@ int main()
     const char* Datei = "thermali.txt";
     const char* Datei2 = "sth.txt";
 
-    //int t_HMC = 1000000; double t_LF = 100;
+    //Thermalisation:
+    int t_HMC = 10000; double t_LF = 0.3;
     double stepsize = 0.01;
     //double n = 2;
-    //HMC(&Grid_2D,Theta,gen,t_HMC,t_LF,stepsize, Datei, n);
+    HMC(&Grid_2D,Theta,gen,t_HMC,t_LF,stepsize, Datei);
     //Metropolis_XY(Theta, &Grid_2D, t_HMC, gen);
 
 
@@ -58,7 +59,9 @@ int main()
     std::cout << "Done" <<std::endl;
 */
 
-    int t_HMC = 100; double t_LF = 100;
+/*
+    t_HMC = 3000;
+    t_LF = 0.3;
     for(double temp = 0.1; temp <= 4.0; temp+=0)
     {
 
@@ -68,8 +71,9 @@ int main()
         //Spin_vector<double> Theta(&Grid_2D);
 
         HMC(&Grid_2D,Theta,gen,t_HMC,t_LF, stepsize);
-        //Metropolis_XY(Theta, &Grid_2D, 10000, gen);
+        //Metropolis_XY(Theta, &Grid_2D, 100000, gen);
+
         temp += 0.1;
     }
-
+*/
 }
