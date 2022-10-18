@@ -393,10 +393,10 @@ double dVdq(int &i,Spin_vector<Val> &Theta, Grid_XY *g)
 }
 
 template<typename Val>
-void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &t_LF, Grid_XY *g, double &stepsize)
+void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &t_LF, Grid_XY *g, double &stepsize, double &steps)
 {
     Spin_vector<Val> q(g);
-    double steps = t_LF/stepsize;
+    //double steps = t_LF/stepsize;
 
 
     for(int m =0; m<Theta.Dim(); ++m)
@@ -439,14 +439,14 @@ void Leapfrog(Spin_vector<Val> &Theta, Spin_vector<Val> &p, double &t_LF, Grid_X
 }
 
 template<typename Val>
-void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, double &t_LF, double &stepsize, const char* Datei)
+void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, double &t_LF, double &stepsize, double &steps)
 {
     std::vector<double> Energies;
     std::vector<double> Magnetizations;
     double EDavg = 0;
     double MDavg = 0;
 
-    FILE * handle = fopen(Datei, "w");
+    //FILE * handle = fopen(Datei, "w");
 
     for(int t = 0; t < t_HMC; ++t)
     {
@@ -471,7 +471,7 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, dou
         {Final[index] = Theta[index];}
 
         //Leapfrog Algo
-        Leapfrog(Final, p_i_initial, t_LF,g, stepsize);
+        Leapfrog(Final, p_i_initial, t_LF,g, stepsize, steps);
 
         //Final Guidance
         Guidance_Calc_f(Final,p_i_initial,p_con_squared_final,H_g_final,g);
@@ -502,25 +502,27 @@ void HMC(Grid_XY *g, Spin_vector<Val> &Theta, std::mt19937 &gen, int &t_HMC, dou
         }
 
         //Measurements:
-        if(t > 1)
+        if(t > t_HMC/2)
         {
             Energies.push_back(ED_XY(Theta,g));
             Magnetizations.push_back(MD_XY(Theta,g));
-            fprintf(handle, "%d %lf\n",t,MD_XY(Theta,g));
+            //std::cout << MD_XY(Theta,g) << std::endl;
+            //fprintf(handle, "%d %lf\n",t,MD_XY(Theta,g));
         }
 
     }
     //double standarddev = sdev(Magnetizations);
     EDavg = Mean(Energies);
     MDavg = Mean(Magnetizations);
-    //double tau_M_XY = tau_int(Magnetizations);
+    double tau_M_XY = tau_int(Magnetizations);
     //double sigma_M_XY = auto_std_err_prim(Magnetizations.size(),tau_M_XY, Magnetizations);
     //std::cout << g->getT() << " " << 2*tau_M_XY*15 << std::endl;
     //std::cout << t_LF/0.1 << " " << 2*tau_M_XY*(t_LF/0.1) << std::endl;
-    //std::cout << 2*tau_M_XY*(steps) << " ";
+    //std::cout << 2*tau_M_XY*steps << " ";
+
     //fprintf(handle, "%lf ",2*tau_M_XY*(t_LF/stepsize));
     //std::cout << stepsize << std::endl;
-    //std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
+    std::cout <<  g->getT() << "  "<<EDavg << " " <<MDavg << std::endl;
     //std::cout <<  g->getT() << "  "<<standarddev << std::endl;
     //std::cout << g->getT() << " " << sigma_M_XY << std::endl;
 
